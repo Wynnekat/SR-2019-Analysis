@@ -99,24 +99,32 @@ library(ggrepel)
 ```
 
 ```{r, eval=TRUE, echo=FALSE, warning=TRUE, message=FALSE}
+
 # Data sets
+
 Seed_Cleaning <- read_excel("Seed_Rain_Data_2019_FINAL.xlsx")
 Seed_Rain_Date <- read_excel("Seed_Rain_Date.xlsx")
 ```
 
 ```{r, results = 'hide',echo=FALSE,  message = FALSE, warning = FALSE}
+
 ## Data Cleaning
 ### General Data Cleaning 
+
+
 # Checking to make sure all the SPP6 levels are correct (no misspellings or weirdness)
+
 sort(unique(Seed_Cleaning$SPP6))
 ```
 
 ```{r, results = 'hide', echo=FALSE, message = FALSE, warning = FALSE}
+
 ## Code to remove non-viable seeds from the dataset
 Seed_Data <- filter(Seed_Cleaning, !grepl('NONE',SPP6)) 
 ```
 
 ```{r, results = 'hide',echo=FALSE, message = FALSE, warning = FALSE}
+
 # Code to lump certain species together
 Seed_Data_Lumped <- Seed_Data
 for(i in 1:nrow(Seed_Data)){
@@ -141,6 +149,8 @@ Seed_Data_Lumped$SPP6 <- as.factor(Seed_Data_Lumped$SPP6)
 
 
 # Remove columns unnecessary for analysis (Sampling Date, Notes, Taxon, Revisit)
+
+
 # Data set with sampling date (analysis 2 and 4)
 Seed_Data_Date <-  Seed_Data_Lumped[, -c(7,8,9)]
 
@@ -152,7 +162,7 @@ Seed_Data_Lumped <- Seed_Data_Lumped[, -c(3,7,8,9)]
 
 ```{r}
 
-# Get rid of unknown species to make a species list
+# Get rid of unknown species to make a species list for analysis 4
 Species_list_SR <- filter(Seed_Data_Lumped, !grepl('UNK',SPP6)) 
 Species_list_SR <- filter(Species_list_SR , !grepl('unk',SPP6)) 
 Species_list_SR <- filter(Species_list_SR , !grepl('	
@@ -178,6 +188,8 @@ To test for differences between the number of seeds falling in remnant and resto
 ```{r, results = 'hide', echo = FALSE, message = FALSE, warning = FALSE}
 
 ### Analysis 1: Data Wrangling
+
+
 # Make a new dataframe (Uni_Seed) to analyze whether there are differences in the amount of seed dispersal occurring between sites
 Uni_Seed <- Seed_Data_Lumped %>% 
   
@@ -229,8 +241,9 @@ Posthoc comparisons between the remnant and reconstructed prairies.
 
 ```{r, message = FALSE, echo = FALSE, warning = FALSE}
 
-
 ## Do restored sites differ from the remnant?
+
+
 # Contrasts
 standardize <- emmeans(NegBinom_seeds_glm, "Plot")
 contrast(standardize, "trt.vs.ctrl")
@@ -239,12 +252,14 @@ contrast(standardize, "trt.vs.ctrl")
 ### Analysis 1: Visualizing Differences
 
 ```{r, results = 'hide', echo = FALSE, message = FALSE, warning = FALSE}
-#Make Tucker Prairie (the remnant prairie) the reference level
+
+# Make Tucker Prairie (the remnant prairie) the reference level
 Uni_Seed$Plot <- factor(Uni_Seed$Plot, levels=c("PFCA 1", "PFCA 2", "PFCA 3", "TP"))
 ```
 
 ```{r, message = FALSE, echo = FALSE, results = 'hide', echo = FALSE, warning = FALSE}
-#setwd("~/Desktop/Seed Rain 2019/Graphics")
+
+# setwd("~/Desktop/Seed Rain 2019/Graphics")
 abund.plot <- ggplot(data=Uni_Seed)+
   geom_boxplot(aes(x=Plot, y=totseeds, fill = Plot), show.legend = FALSE) +
   theme_classic()+
@@ -273,29 +288,35 @@ Similar to Rabinowitz and Rapp (1980), we graphed seed rain phenology to compare
 
 
 ### Analysis 2: Data Wrangling
+
+
 # Let's do seed rain density to compare to Rabinowitz and Rapp 1980
 Seed_Rain_Date$Plot <- as.factor(Seed_Rain_Date$Plot)
 
-
-
 # ----------
+
 # Make a new dataset for the PFCA and TP 2019 Sites 
 Density_Date_PFCA_TP19 <- Seed_Rain_Date %>% 
   filter(Plot != "TP_1980")
+
 # Make a new column for seed rain density per week for PFCA and TP 2019
+
+
 ## Density = height of carpet trap * width of carpet trap * # of carpets at a site
 ## Density = 0.1m * 0.1m * 50
 ## Density = 0.5m^2 (for a site)
+
+
 Density_Date_PFCA_TP19$Density_J <- Density_Date_PFCA_TP19$Number_J / 0.5
 
-
-
 # ----------
+
 # Make a new dataset for just TP in 1978
+
+
 ## Density = pi * radius of trap^2 * # of petri dishes at TP
 ## Density = 3.145 * 0.045m^2 * 50
 ## Density = 0.31807688 m^2 
-
 
 
 Density_Date_TP1980 <- Seed_Rain_Date %>% 
@@ -309,7 +330,9 @@ New_Seed_Rain_Date <- full_join(Density_Date_TP1980, Density_Date_PFCA_TP19)
 ### Analysis 2: Visualizing differences
 
 ```{r, results = 'hide', echo = FALSE, message = FALSE, warning = FALSE}
+
 # TP 2019, TP 1978, PFCA 1, PFCA 2, PFCA 3
+
 # png("Seed_abundance_overtime_R78_SRP.png", width=850, height =600)
 ggplot(New_Seed_Rain_Date, aes(y=Density_J, x=Date, group=Plot)) +
   geom_line(aes(color=Plot), linewidth = 1.5, alpha = 1) +
@@ -362,16 +385,17 @@ Seed_Com_Long <- Seed_Data_Lumped %>%
 seed_community_wide_full <- spread(Seed_Com_Long, SPP6, totseeds, fill = 0)
 
 
-
 # ----------
-
 
 # Remove all columns that isn't a species ID or Site
 
 seed_community_wide <- seed_community_wide_full[, -c(1,2)]
+
 # Make row labels UniqueTran
 seed_community_wide_labs   <- seed_community_wide[,-1]
 row.names(seed_community_wide_labs) <- seed_community_wide$UniqueTran
+
+
 # Convert into matrix
 seed_mat <- data.matrix(seed_community_wide_labs)
 ```
@@ -382,17 +406,21 @@ seed_mat <- data.matrix(seed_community_wide_labs)
 
 # Standardize the community matrix
 ## By site total
+
 seed_mat_tot <- decostand(seed_mat, "total")
 ```
 
 ```{r, results = 'hide', echo = FALSE, message = FALSE, warning = FALSE, fig.show='hide'}
 
 # Check the number of dimensions needed for the NMDS  (write the result of this test)
+
 ## Bray-Curtis dissimilarity
 dimcheckMDS(seed_mat_tot, distance = "bray", k=6, trymax= 50, autotransform = FALSE)
+
+
 ###
 ## *** Best solution repeated 5 times
-# 0.34554313 0.17437728 0.11238226 0.08203566 0.06245417 0.05093960
+# 0.34302456 0.17850813 0.11694087 0.08649123 0.06448893 0.05274240
 # We can use 2 dimensions (< 20)
 ```
 
@@ -404,7 +432,9 @@ Tot_NMDS <- metaMDS(seed_mat_tot, dist = "bray", k=2, trymax=1000, autotransform
 ```{r, results = 'hide', message = FALSE, echo = FALSE, warning = FALSE}
 
 ### Looks at which species were the most influential in driving the observed patterns
+
 inner.spp.fit <- envfit(Tot_NMDS, seed_mat_tot, permutations = 5000, k =2)
+
 #head(inner.spp.fit)
 ```
 
@@ -412,16 +442,23 @@ inner.spp.fit <- envfit(Tot_NMDS, seed_mat_tot, permutations = 5000, k =2)
 
 # Make a grouping variable so I can match site names to the NMDS output
 site = c(rep("PFCA 1", 10), rep("PFCA 2", 10), rep("PFCA 3", 10), rep("TP", 10))
+
 # Put the NMDS scores into it's own dataframe 
 scrs <- as.data.frame(scores(Tot_NMDS, display = "sites"))
+
 # Match the NMDS scores to the right site labels
 scrs <- cbind(scrs, site)
+
 # Extracts the required scaling factor for the vector arrows
 arrow_factor <- ordiArrowMul(inner.spp.fit)
+
 # Take the envfit model and convert into a a dataframe (scaled)
 spp.scrs <- as.data.frame(scores(inner.spp.fit, display = "vectors"))*arrow_factor
+
 # Add the p values, R squared values to the envit model species score dataframe
 spp.scrs <- cbind(spp.scrs, Species = rownames(spp.scrs), Pvalues = inner.spp.fit$vectors$pvals, R_squared = inner.spp.fit$vectors$r)
+
+
 # Subset out species that had a p value <= 0.001 (since I think env fit truncates to 0.001)
 spp.scrs.01 <- subset(spp.scrs, Pvalues < 0.002)
 ```
@@ -429,9 +466,14 @@ spp.scrs.01 <- subset(spp.scrs, Pvalues < 0.002)
 ```{r, results = 'hide', message = FALSE, echo = FALSE, warning = FALSE, fig.show='hide'}
 
 # Only including this plot because I need to call the plot in order to obtain the ordiellipse object
+
 plot(Tot_NMDS$points, xlim = c(-2, 2), ylim = c(-2, 2), col = alpha(0.5), xlab = "NMDS1", ylab = "NMDS2", cex.lab = 1.25, cex.axis = 1.25, bty="n")
+
+
 # Store the ordiellipse data into a list
 site.ellipses <- ordiellipse(Tot_NMDS, groups = site, display = "sites", kind = "se", conf = 0.95)
+
+
 # Convert the ordiellipse data into a dataframe that I can plot in ggplot
 site.ellipses.long2 <- ordiellipse.long(site.ellipses, grouping.name="site")
 ```
@@ -439,6 +481,7 @@ site.ellipses.long2 <- ordiellipse.long(site.ellipses, grouping.name="site")
 ```{r, results = 'hide', message = FALSE, echo = FALSE, warning = FALSE}
 
 # Plot the species scores + the NMDS results
+
 NMDS_plot <- ggplot(scrs) +
   geom_point(mapping = aes(x = NMDS1, y = NMDS2, color = site, fill = site, shape = site), size=2.5, alpha = 0.8) + 
   scale_shape_manual(name = "", values=c(23,24,22,21),breaks=c("PFCA 1", "PFCA 2", "PFCA 3", "TP"), labels = c("Young", "Middle", "Old", "Remnant 2019")) +
@@ -451,12 +494,15 @@ NMDS_plot <- ggplot(scrs) +
              arrow = arrow(length = unit(0.2, "cm")), colour = "#888888", alpha = 0.7) +
   geom_text_repel(data = spp.scrs.01, aes(x = NMDS1 * arrow_factor, y = NMDS2 * arrow_factor, 
                                           label = Species), size = 3, max.overlaps = getOption("ggrepel.max.overlaps", default = 50) ) +
-  annotate("text", x = -.95, y = 1.1, label = "bold(Stress) == 0.174",
+  annotate("text", x = -.95, y = 1.1, label = "bold(Stress) == 0.179",
   parse = TRUE)+
   annotate("text", x = -1.12, y = 1, label = "bold(K) == 2",
   parse = TRUE) +
   theme_classic() +
   theme(text=element_text(size=16), legend.key.size=unit(0.5, "cm"))
+
+
+
 NMDS_plot
 ```
 
@@ -465,19 +511,25 @@ NMDS_plot
 ### Analysis 3: PERMANOVA
 
 ```{r, message = FALSE, echo = FALSE, warning = FALSE}
+
+
 # Standardize using site total and bray-curtis
 data.dist.tot <- vegdist(seed_mat_tot, method = "bray")
 seed_com <- data.frame(site, seed_mat)
 ```
 
 ```{r, message = FALSE, echo = FALSE, warning = FALSE}
+
+
 # PERMANOVA looking at differences in species composition between sites
 seed_perma_mod_tot <- adonis2(data.dist.tot~as.factor(site), data=seed_com)
 seed_perma_mod_tot
 ```
 
 ```{r, message = FALSE, echo = FALSE, warning = FALSE}
-#Pairwise comparisons between sites
+
+
+# Pairwise comparisons between sites
 pairwise.adonis2(data.dist.tot~as.factor(site), data=seed_com)
 ```
 
@@ -496,15 +548,21 @@ Species composition of the seed rain significantly differed between all sites. R
 #### Analysis 4: Data wrangling
 
 ```{r, message = FALSE, echo = FALSE, warning = FALSE}
+
+
 # Make a new dataset that aggregates the total number of seeds per species and per site for each week
 Lumped_Seeds_SPP <- Seed_Data_Date %>% 
                         group_by(Plot, SPP6, `Sampling Date`) %>% 
                         summarize(totseeds = sum(Number))
+
+
 # Count the number of distinct species per site according to unique transect 
 Uni_Seed_Diversity <- Seed_Data_Lumped %>% 
   unite("UniqueTran", Plot:Transect, sep = "_", remove = FALSE) %>% 
   group_by(Plot, Transect, UniqueTran)  %>% 
    summarize(Species_richness = n_distinct(SPP6))
+
+
 # Count the number of distinct species per site according to sampling date
 week_species_counts <- Lumped_Seeds_SPP  %>% 
                   group_by(Plot, `Sampling Date`) %>% 
@@ -514,33 +572,56 @@ week_species_counts <- Lumped_Seeds_SPP  %>%
 ### Analysis 4: Fitting the model
 
 ```{r, message = FALSE, echo = FALSE, warning = FALSE}
+
+
 # Make Tucker Prairie the reference level
 Uni_Seed_Diversity$Plot <- factor(Uni_Seed$Plot, levels=c("TP", "PFCA 1", "PFCA 2", "PFCA 3"))
 str(Uni_Seed$Plot)
+
+
+
 # Model fitting
+
+# -------
+
 ## Poisson 
 ### AIC = 256.68
+
 ## Negative binomial threw up an error message 
 ### AIC 258.68 + warning message
+
 ## Linear regression 
 ### AIC 258.65
+
+# -------
+
 # Decided to use the Poisson (dispersion parameter ~ 0.95)
+
+
 Poisson_sr <- glm(Species_richness ~ Plot, family = "poisson", data = Uni_Seed_Diversity)
 summary(Poisson_sr)
 ```
 
 ```{r, message = FALSE, echo = FALSE, warning = FALSE}
+
 ## Do restored sites differ from the remnant?
+
 # Contrasts
 standardize <- lsmeans(Poisson_sr, "Plot")
 contrast(standardize, "trt.vs.ctrl")
+
 ```
 
 ### Analysis 4: Data visualization
 
 ```{r, message = FALSE, echo = FALSE, warning = FALSE}
+
+
 Uni_Seed_Diversity$Plot <- factor(Uni_Seed$Plot, levels=c("PFCA 1", "PFCA 2", "PFCA 3", "TP"))
 str(Uni_Seed$Plot)
+
+
+
 SR.plot <- ggplot(data=Uni_Seed_Diversity)+
   geom_boxplot(aes(x=Plot, y=Species_richness, fill = Plot), show.legend = FALSE) +
   theme_classic()+
@@ -551,11 +632,14 @@ SR.plot <- ggplot(data=Uni_Seed_Diversity)+
   scale_fill_manual(name = "Site", values=c( "#1f78b4", "#a6cee3", "#b2df8a","#33a02c"), breaks=c("PFCA 1", "PFCA 2", "PFCA 3", "TP"), labels = c("Young", "Middle", "Old", "Remnant"))+
  theme(text=element_text(size=20), legend.key.size=unit(1, "cm"))
 SR.plot + annotate("text", x = c(1,3,4) , y = 45, label = "B", size = 6) + annotate("text", x = 2 , y = 55, label = "A", size = 6)
+
 ```
 
 **Figure 4**: The morphospecies richness of seed rain captured per transect in the remnant prairie and the young (2-year-old), middle-aged (6-7-year-old), and old (15-year-old) reconstructed prairies between May 31st and December 12th, 2019. Sites sharing the same letter did not have significantly different amounts of seeds captured from the remnant (p \< 0.05).
 
 ```{r, message = FALSE, echo = FALSE, warning = FALSE}
+
+
 # setwd("~/Desktop/Seed Rain 2019/Graphics")
 Tot_SR_fig <- ggplot(week_species_counts, aes(y=Species_richness, x=`Sampling Date`, group=Plot)) +
   geom_line(aes(colour=Plot), size = 1.5) +
@@ -570,7 +654,10 @@ Tot_SR_fig <- ggplot(week_species_counts, aes(y=Species_richness, x=`Sampling Da
   ylab("Total species richness")+
   xlab("Date")+
   guides(x = guide_axis(angle = 45))
+
+
 Tot_SR_fig 
+
 ```
 
 **Figure 5**: Total morphospecies richness of identified seeds for reconstructed and remnant tallgrass prairies during the study period (May 31 to December 12th, 2019).
