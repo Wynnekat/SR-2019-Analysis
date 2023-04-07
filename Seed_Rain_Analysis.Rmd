@@ -556,6 +556,9 @@ Lumped_Seeds_SPP <- Seed_Data_Date %>%
                         summarize(totseeds = sum(Number))
 
 
+
+
+
 # Count the number of distinct species per site according to unique transect 
 Uni_Seed_Diversity <- Seed_Data_Lumped %>% 
   unite("UniqueTran", Plot:Transect, sep = "_", remove = FALSE) %>% 
@@ -663,3 +666,55 @@ Tot_SR_fig
 **Figure 5**: Total morphospecies richness of identified seeds for reconstructed and remnant tallgrass prairies during the study period (May 31 to December 12th, 2019).
 
 **Results :** Morphospecies richness was only significantly greater in the middle-aged prairie (6-7-year-old prairie) compared to the remnant. Overall, morphospecies richness trended upward during the study period, with more morphospecies captured in the late fall than in the summer.
+
+
+## Analysis 5: Supplemental table to assist in cross study comparison
+
+```{r}
+Lumped_unknown1 <- Lumped_Seeds_SPP %>% 
+  filter(grepl('UNK',SPP6)) %>% 
+  group_by(Plot, `Sampling Date`) %>% 
+                        summarize(totseeds = sum(totseeds))
+
+Lumped_unknown2 <- Lumped_Seeds_SPP %>% 
+  filter(grepl('PANICUM?',SPP6)) %>% 
+  group_by(Plot, `Sampling Date`) %>% 
+                        summarize(totseeds = sum(totseeds))
+
+Lumped_unknown <- full_join(Lumped_unknown1, Lumped_unknown2)
+
+Lumped_unknown$SPP6 <- rep("UNKSPP", 24)
+
+Lumped_no_unknown <- Lumped_Seeds_SPP %>% 
+   filter(!grepl('UNK',SPP6))
+
+Lumped_no_unknown <- Lumped_no_unknown  %>% 
+   filter(!grepl('PANICUM?',SPP6))
+
+full_SPP6_Date <- full_join(Lumped_unknown, Lumped_no_unknown)
+
+
+full_SPP6_Date_TOT <- full_SPP6_Date %>% 
+                        group_by(SPP6, `Sampling Date`) %>% 
+                        summarize(totseeds = sum(totseeds))
+
+```
+
+
+
+
+```{r}
+# Per site
+seed_community_phenology_site <- spread(full_SPP6_Date, `Sampling Date`, totseeds, fill = 0)
+
+# Lumped across site
+
+seed_community_phenology_lumped <- spread(full_SPP6_Date_TOT, `Sampling Date`, totseeds, fill = 0)
+
+
+test<- seed_community_phenology_lumped %>% 
+  arrange(desc(`2019-06-13`), desc(`2019-06-27`), desc(`2019-07-10`), desc(`2019-07-11`), desc(`2019-07-26`), desc(`2019-08-08`),  desc(`2019-08-22`),  desc(`2019-09-05`), desc(`2019-09-19`), desc(`2019-10-03`), desc(`2019-10-17`), desc(`2019-11-02`), desc(`2019-11-14`), desc(`2019-12-01`), desc(`2019-12-12`))
+
+
+```
+
