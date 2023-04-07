@@ -96,6 +96,8 @@ library(BiodiversityR)
 
 # Function that repels geom_text so that text labels don't overlap
 library(ggrepel)
+
+library(flextable)
 ```
 
 ```{r, eval=TRUE, echo=FALSE, warning=TRUE, message=FALSE}
@@ -712,9 +714,31 @@ seed_community_phenology_site <- spread(full_SPP6_Date, `Sampling Date`, totseed
 seed_community_phenology_lumped <- spread(full_SPP6_Date_TOT, `Sampling Date`, totseeds, fill = 0)
 
 
-test<- seed_community_phenology_lumped %>% 
+seed_community_phenology_lumped <- seed_community_phenology_lumped %>% 
   arrange(desc(`2019-06-13`), desc(`2019-06-27`), desc(`2019-07-10`), desc(`2019-07-11`), desc(`2019-07-26`), desc(`2019-08-08`),  desc(`2019-08-22`),  desc(`2019-09-05`), desc(`2019-09-19`), desc(`2019-10-03`), desc(`2019-10-17`), desc(`2019-11-02`), desc(`2019-11-14`), desc(`2019-12-01`), desc(`2019-12-12`))
 
 
+seed_community_phenology_lumped [seed_community_phenology_lumped  == 0] <- NA
 ```
 
+```{r}
+
+A1 <- seed_community_phenology_lumped %>% mutate_if(is.numeric, str_replace_all, pattern = "NA", replacement = ".")
+
+ft <- flextable(A1)
+
+ft
+
+```
+
+```{r}
+library(officer)
+library(flextable)
+
+read_docx() %>% 
+  body_add_flextable(value = ft) %>%  
+  print(target = "example_table_word.docx")
+
+
+
+```
