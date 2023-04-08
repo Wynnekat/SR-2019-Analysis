@@ -249,29 +249,56 @@ Posthoc comparisons between the remnant and reconstructed prairies.
 # Contrasts
 standardize <- emmeans(NegBinom_seeds_glm, "Plot")
 contrast(standardize, "trt.vs.ctrl")
+
+
+
+## 95% confidence intervals 
+
+emmeans::emmeans(NegBinom_seeds_glm, "Plot", type = "response")
+
+## Make a new dataframe to hold the model estimates and 95% confidence interval bounds
+
+response <- c(2081, 6240, 2408, 1388)
+lower <- c(1439, 4316, 1665, 959)
+upper <- c(3009, 9023, 3482, 2007)
+site <- c("TP", "PFCA 1", "PFCA 2", "PFCA 3")
+
+neg.binom.est <- data.frame(site, response, lower, upper)
+
 ```
+
 
 ### Analysis 1: Visualizing Differences
 
 ```{r, results = 'hide', echo = FALSE, message = FALSE, warning = FALSE}
 
 # Make Tucker Prairie (the remnant prairie) the reference level
+
 Uni_Seed$Plot <- factor(Uni_Seed$Plot, levels=c("PFCA 1", "PFCA 2", "PFCA 3", "TP"))
+
+neg.binom.est$site <- factor(neg.binom.est$site, levels=c("PFCA 1", "PFCA 2", "PFCA 3", "TP"))
 ```
+
 
 ```{r, message = FALSE, echo = FALSE, results = 'hide', echo = FALSE, warning = FALSE}
 
+# scatterplot with 95% confidence intervals
+
 # setwd("~/Desktop/Seed Rain 2019/Graphics")
-abund.plot <- ggplot(data=Uni_Seed)+
-  geom_boxplot(aes(x=Plot, y=totseeds, fill = Plot), show.legend = FALSE) +
+abund.jitter.plot <- ggplot()+
+  geom_jitter(data=Uni_Seed, aes(x=Plot, y=totseeds, color = Plot), show.legend = FALSE, width = .2, size = 2) +
+    geom_point(data = neg.binom.est, aes(x=site, y=response), show.legend = FALSE, size = 2.5)+
+  geom_errorbar(data = neg.binom.est, aes(x= site, y = response, ymin = lower, ymax = upper), width = 0.15, cex = 0.75)+
   theme_classic()+
   xlab("Site")+
   ylim(0,10000)+
   ylab("Number of seeds")+
   scale_x_discrete(labels = c ("PFCA 1" = "Young", "PFCA 2" = "Middle", "PFCA 3" = "Old", "TP" = "Remnant"), guide = guide_axis(angle = 0)) +
-  scale_fill_manual(name = "Site", values=c( "#1f78b4", "#a6cee3", "#b2df8a","#33a02c"), breaks=c("PFCA 1", "PFCA 2", "PFCA 3", "TP"), labels = c("Young", "Middle", "Old", "Remnant"))+
+  scale_color_manual(name = "Site", values=c( "#1f78b4", "#a6cee3", "#b2df8a","#33a02c"), breaks=c("PFCA 1", "PFCA 2", "PFCA 3", "TP"), labels = c("Young", "Middle", "Old", "Remnant"))+
  theme(text=element_text(size=16), legend.key.size=unit(1, "cm"))+ geom_vline(xintercept = 3.5, linetype = "longdash")
-abund.plot + annotate("text", x = 1 , y = 9500, label = "*", size = 9)
+
+
+abund.jitter.plot + annotate("text", x = 1 , y = 9500, label = "*", size = 9.5)
 ```
 
 **Figure 1**: The number of seeds captured per transect in the remnant prairie and the young (2-year-old), middle-aged (6-7-year-old), and old (15-year-old) reconstructed prairies between May 31st and December 12th, 2019. Asterisk symbol indicates sites that had significantly different amounts of seeds captured when compared to the remnant (p \< 0.05).
@@ -343,8 +370,8 @@ ggplot(New_Seed_Rain_Date, aes(y=Density_J, x=Date, group=Plot)) +
   scale_shape_manual(name = "", values=c(23,24,22,21, 20),breaks=c("PFCA 1", "PFCA 2", "PFCA 3", "TP_2019", "TP_1980"), labels = c("Young", "Middle", "Old", "Remnant 2019", "Remnant 1978")) +
   scale_fill_manual(name = "", values=c("#1f78b4", "#a6cee3", "#b2df8a", "#33a02c", "#3A3B3C"), breaks=c("PFCA 1", "PFCA 2", "PFCA 3", "TP_2019", "TP_1980"), labels = c("Young", "Middle", "Old", "Remnant 2019", "Remnant 1978"))+
   theme_classic()+
-  scale_x_datetime(date_breaks = '1 month', date_labels="%b %d", limits=as.POSIXct(c("2019-06-10", "2020-1-01")))+
-  theme(text=element_text(size=16), legend.key.size=unit(0.25, "cm"))+
+  scale_x_datetime(date_breaks = '1 month', date_labels="%b %d", limits=as.POSIXct(c("2019-06-5", "2019-12-25")))+
+  theme(text=element_text(size=16), legend.key.size=unit(0.25, "cm"), legend.position="bottom", legend.box = "horizontal")+
   ylab("Seeds"~m^-2)+
   xlab("Date")+
   guides(x = guide_axis(angle = 45))+
@@ -496,9 +523,9 @@ NMDS_plot <- ggplot(scrs) +
              arrow = arrow(length = unit(0.2, "cm")), colour = "#888888", alpha = 0.7) +
   geom_text_repel(data = spp.scrs.01, aes(x = NMDS1 * arrow_factor, y = NMDS2 * arrow_factor, 
                                           label = Species), size = 3, max.overlaps = getOption("ggrepel.max.overlaps", default = 50) ) +
-  annotate("text", x = -.95, y = 1.1, label = "bold(Stress) == 0.179",
+  annotate("text", x = -.90, y = 1.1, label = "bold(Stress) == 0.179",
   parse = TRUE)+
-  annotate("text", x = -1.12, y = 1, label = "bold(K) == 2",
+  annotate("text", x = -1.05, y = 1, label = "bold(K) == 2",
   parse = TRUE) +
   theme_classic() +
   theme(text=element_text(size=16), legend.key.size=unit(0.5, "cm"))
