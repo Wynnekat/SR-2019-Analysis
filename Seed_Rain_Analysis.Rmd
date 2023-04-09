@@ -97,7 +97,12 @@ library(BiodiversityR)
 # Function that repels geom_text so that text labels don't overlap
 library(ggrepel)
 
+# Function that helps me create tables
 library(flextable)
+
+# Function that allows me to export tables to word
+library(officer)
+
 ```
 
 ```{r, eval=TRUE, echo=FALSE, warning=TRUE, message=FALSE}
@@ -295,6 +300,7 @@ abund.jitter.plot <- ggplot()+
   ylab("Number of seeds")+
   scale_x_discrete(labels = c ("PFCA 1" = "Young", "PFCA 2" = "Middle", "PFCA 3" = "Old", "TP" = "Remnant"), guide = guide_axis(angle = 0)) +
   scale_color_manual(name = "Site", values=c( "#1f78b4", "#a6cee3", "#b2df8a","#33a02c"), breaks=c("PFCA 1", "PFCA 2", "PFCA 3", "TP"), labels = c("Young", "Middle", "Old", "Remnant"))+
+   scale_x_discrete(labels = c ("PFCA 1" = "Young", "PFCA 2" = "Middle", "PFCA 3" = "Old", "TP" = "Remnant"), guide = guide_axis(angle = 0)) +
  theme(text=element_text(size=16), legend.key.size=unit(1, "cm"))+ geom_vline(xintercept = 3.5, linetype = "longdash")
 
 
@@ -553,13 +559,24 @@ seed_com <- data.frame(site, seed_mat)
 # PERMANOVA looking at differences in species composition between sites
 seed_perma_mod_tot <- adonis2(data.dist.tot~as.factor(site), data=seed_com)
 seed_perma_mod_tot
+
 ```
 
 ```{r, message = FALSE, echo = FALSE, warning = FALSE}
 
-
 # Pairwise comparisons between sites
 pairwise.adonis2(data.dist.tot~as.factor(site), data=seed_com)
+```
+
+
+```{r, message = FALSE, echo = FALSE, warning = FALSE}
+
+# Betadisper looking at whether there are significant differences in community variation between sites.
+
+## No significant differences
+
+bd <- betadisper(data.dist.tot, as.factor(seed_com$site))
+anova(bd)
 ```
 
 ### Analysis 3: Results
@@ -639,31 +656,47 @@ summary(Poisson_sr)
 ## Do restored sites differ from the remnant?
 
 # Contrasts
-standardize <- lsmeans(Poisson_sr, "Plot")
+standardize <- emmeans(Poisson_sr, "Plot")
 contrast(standardize, "trt.vs.ctrl")
+
+
+## 95% confidence intervals 
+
+emmeans::emmeans(Poisson_sr, "Plot", type = "response")
+
+## Make a new dataframe to hold the model estimates and 95% confidence interval bounds
+
+response.sr <- c(31.2, 36.5, 41.8, 27.6)
+lower.sr <- c(27.9, 32.9, 38.0, 24.5)
+upper.sr <- c(34.9, 40.4, 46.0, 31.1)
+site <- c("TP", "PFCA 1", "PFCA 2", "PFCA 3")
+
+Poisson.sr.est <- data.frame(site, response.sr ,lower.sr, upper.sr)
 
 ```
 
 ### Analysis 4: Data visualization
 
 ```{r, message = FALSE, echo = FALSE, warning = FALSE}
-
-
 Uni_Seed_Diversity$Plot <- factor(Uni_Seed$Plot, levels=c("PFCA 1", "PFCA 2", "PFCA 3", "TP"))
-str(Uni_Seed$Plot)
 
 
+Poisson.sr.est$site <- factor(Poisson.sr.est$site, levels=c("PFCA 1", "PFCA 2", "PFCA 3", "TP"))
 
 SR.plot <- ggplot(data=Uni_Seed_Diversity)+
-  geom_boxplot(aes(x=Plot, y=Species_richness, fill = Plot), show.legend = FALSE) +
+  geom_jitter(data=Uni_Seed_Diversity, aes(x=Plot, y=Species_richness, color = Plot), show.legend = FALSE, width = .2, size = 2) +
+  geom_point(data = Poisson.sr.est, aes(x=site, y=response.sr), show.legend = FALSE, size = 2.5)+
+  geom_errorbar(data = Poisson.sr.est, aes(x= site, y = response.sr, ymin = lower.sr, ymax = upper.sr), width = 0.15, cex = 0.75)+
   theme_classic()+
   xlab("Site")+
   ylim(0,60)+
-  ylab("Species Richness")+
+  ylab("Total species richness")+
   scale_x_discrete(labels = c ("PFCA 1" = "Young", "PFCA 2" = "Middle", "PFCA 3" = "Old", "TP" = "Remnant"), guide = guide_axis(angle = 0)) +
-  scale_fill_manual(name = "Site", values=c( "#1f78b4", "#a6cee3", "#b2df8a","#33a02c"), breaks=c("PFCA 1", "PFCA 2", "PFCA 3", "TP"), labels = c("Young", "Middle", "Old", "Remnant"))+
- theme(text=element_text(size=20), legend.key.size=unit(1, "cm"))
-SR.plot + annotate("text", x = c(1,3,4) , y = 45, label = "B", size = 6) + annotate("text", x = 2 , y = 55, label = "A", size = 6)
+  scale_color_manual(name = "Site", values=c( "#1f78b4", "#a6cee3", "#b2df8a","#33a02c"), breaks=c("PFCA 1", "PFCA 2", "PFCA 3", "TP"), labels = c("Young", "Middle", "Old", "Remnant"))+
+ theme(text=element_text(size=16), legend.key.size=unit(1, "cm"))
+SR.plot +  annotate("text", x = 2 , y = 55, label = "*", size = 9.5)+
+  geom_vline(xintercept = 3.5, linetype = "longdash")
+
 
 ```
 
@@ -759,12 +792,10 @@ ft
 ```
 
 ```{r}
-library(officer)
-library(flextable)
 
-read_docx() %>% 
-  body_add_flextable(value = ft) %>%  
-  print(target = "example_table_word.docx")
+#read_docx() %>% 
+  #body_add_flextable(value = ft) %>%  
+  #print(target = "example_table_word.docx")
 
 
 
