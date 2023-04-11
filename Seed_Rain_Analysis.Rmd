@@ -44,7 +44,7 @@ fontsize: 12pt
 
 **Package Version:** Found in the .readme document in GitHub Repository
 
-**Last updated: 07 April 2023**
+**Last updated: 10 April 2023**
 
 ------------------------------------------------------------------------
 
@@ -273,7 +273,6 @@ neg.binom.est <- data.frame(site, response, lower, upper)
 
 ```
 
-
 ### Analysis 1: Visualizing Differences
 
 ```{r, results = 'hide', echo = FALSE, message = FALSE, warning = FALSE}
@@ -285,7 +284,6 @@ Uni_Seed$Plot <- factor(Uni_Seed$Plot, levels=c("PFCA 1", "PFCA 2", "PFCA 3", "T
 neg.binom.est$site <- factor(neg.binom.est$site, levels=c("PFCA 1", "PFCA 2", "PFCA 3", "TP"))
 ```
 
-
 ```{r, message = FALSE, echo = FALSE, results = 'hide', echo = FALSE, warning = FALSE}
 
 # scatterplot with 95% confidence intervals
@@ -293,7 +291,7 @@ neg.binom.est$site <- factor(neg.binom.est$site, levels=c("PFCA 1", "PFCA 2", "P
 # setwd("~/Desktop/Seed Rain 2019/Graphics")
 abund.jitter.plot <- ggplot()+
   geom_jitter(data=Uni_Seed, aes(x=Plot, y=totseeds, color = Plot), show.legend = FALSE, width = .2, size = 2) +
-    geom_point(data = neg.binom.est, aes(x=site, y=response), show.legend = FALSE, size = 2.5)+
+    geom_point(data = neg.binom.est, aes(x=site, y=response), show.legend = FALSE, size = 3.5)+
   geom_errorbar(data = neg.binom.est, aes(x= site, y = response, ymin = lower, ymax = upper), width = 0.15, cex = 0.75)+
   theme_classic()+
   xlab("Site")+
@@ -308,11 +306,11 @@ abund.jitter.plot <- ggplot()+
 abund.jitter.plot + annotate("text", x = 1 , y = 9500, label = "*", size = 9.5)
 ```
 
-**Figure 1**: The number of seeds captured per transect in the remnant prairie and the young (2-year-old), middle-aged (6-7-year-old), and old (15-year-old) reconstructed prairies between May 31st and December 12th, 2019. Asterisk symbol indicates sites that had significantly different amounts of seeds captured when compared to the remnant (p \< 0.05).
+**Figure 1**: The number of seeds captured per transect in the remnant prairie (dark green), young (2-year-old, dark blue), middle-aged (6-7-year-old, light blue), and old (15-year-old, light green) reconstructed prairies between May 31st and December 12th, 2019. Error bars represent 95% confidence intervals around model estimates (black). Asterisk symbols indicate sites that had significantly different amounts of seeds captured when compared to the remnant prairie (p \< 0.05).
 
 ### Analysis 1: Results
 
-The quantity of seed rain in reconstructions decreased with age. By at least 6-7 years post-initial seeding, the number of seeds falling in reconstructions was comparable to the remnant prairie in 2019. Only the youngest reconstruction had significantly more seeds falling than the remnant prairie sampled in the same year.
+The quantity of seed rain in reconstructions decreased with age. By at least 6-7 years post-initial seeding, the number of seeds dispersing in reconstructions was comparable to the remnant prairie in 2019. Only the youngest reconstructed prairie had significantly more seeds dispersing than the remnant prairie sampled in the same year.
 
 ## Analysis 2: Are there differences in the timing of seed rain between sites?
 
@@ -397,7 +395,7 @@ Seed rain in all prairies exhibited a bimodal pattern of dispersal, where seed r
 
 To assess for seed rain compositional differences between sites, we first created a community distance matrix using Bray-Curtis dissimilarity, which considers changes in species abundance between sites. Before calculating Bray-Curtis dissimilarity, we relativized species abundance by site total (across plot rows). We then visualized compositional differences with non-metric multidimensional scaling (NMDS) ordination. As Clarke (1993) recommended, we did not use solutions with stress \> 0.20. We used the envfit function (permutations = 5000) found in the "vegan" package (Oksanen et al., 2020) to identify species significantly associated with driving the observed compositional differences among sites and plot them as vectors (p \< 0.001).
 
-Using permutational multivariate analysis of variance (PERMANOVA, permutations = 999) and posthoc pairwise comparison tests ("pairwiseAdonis" package; Martinez Arbizu, 2020), we examined potential differences in species composition between remnant and restored prairies. We used the "vegan" package (Oksanen et al., 2020) to conduct all multivariate analyses.
+Using permutational multivariate analysis of variance (PERMANOVA, permutations = 999) and posthoc pairwise comparison tests ("pairwiseAdonis" package; Martinez Arbizu, 2020), we examined potential differences in species composition between remnant and restored prairies. Additionally, we tested for homogeneity of multivariate dispersions to assess whether there were differences in variation among communities between study sites. We first calculated multivariate dispersion for each site using the *betadisper* function, and then conducted an ANOVA to detect differences between sites. We used the "vegan" package (Oksanen et al., 2020) to conduct all multivariate analyses.
 
 *Note that using Jaccard dissimilarity and presence/absence produced similar results to Bray-Curtis (Not shown).*
 
@@ -569,6 +567,7 @@ seed_perma_mod_tot
 pairwise.adonis2(data.dist.tot~as.factor(site), data=seed_com)
 ```
 
+### Analysis 3: Multivariate homogeneity of group dispersions test
 
 ```{r, message = FALSE, echo = FALSE, warning = FALSE}
 
@@ -582,36 +581,38 @@ anova(bd)
 
 ### Analysis 3: Results
 
-Species composition of the seed rain significantly differed between all sites. Reconstructed prairies of comparable ages shared the most similarities in regards to species composition. Except for some marginal overlap with the oldest reconstruction, the remnant prairie contained a distinct community of dispersing plants compared to reconstructed sites. In general, NMDS1 appears to correspond to plant life history traits, where influential annual/biannual species in the seed rain align on the left side of the axis and perennial species on the right side. NMDS2 may be associated with plant functional group, where influential forbs cluster at higher values and graminoids at lower values along the axis.
+Species composition of the seed rain significantly differed between all sites (*PERMANOVA,* R^2^ = 0.41, F~3~ = 8.19, p \< 0.001; *all pairwise comparisons,* p \< 0.01). However, variation in community composition did not differ among the sampled prairies (*ANOVA,* R^2^ = 0.04,F~3~ = 0.54, p = 0.66). Reconstructed prairies of comparable ages shared the most similarities in regards to species composition. Except for some marginal overlap with the oldest reconstruction, the remnant prairie contained a distinct community of dispersing plants compared to reconstructed sites. In general, NMDS1 appeared to correspond to plant life history traits, where influential annual/biannual species in the seed rain align on the left side of the axis and perennial species on the right side. NMDS2 may be associated with plant functional group, where influential forbs cluster at higher values and graminoids at lower values along the axis.
 
 ## Analysis 4: Are there differences in the diversity of seed rain between sites?
 
 ### **Are there differences in the diversity of seed rain between sites?**
 
-*Note* I later plan to include analyses and figs for c values and Shannon diversity.
+\-\--
 
-#### **Species richness**
 
-#### Analysis 4: Data wrangling
+```{r, results = 'hide', echo = FALSE, message = FALSE, warning = FALSE}
 
-```{r, message = FALSE, echo = FALSE, warning = FALSE}
-
+### Analysis 4: Data wrangling 
 
 # Make a new dataset that aggregates the total number of seeds per species and per site for each week
 
 Lumped_Seeds_SPP <- Seed_Data_Date %>% 
-                        group_by(Plot, SPP6, `Sampling Date`) %>% 
+                        filter(!grepl('UNK',SPP6)) %>% 
+                        filter(!grepl('PANICUM?',SPP6)) %>% 
+                        group_by(Plot, Transect, SPP6) %>% 
+                        summarize(totseeds = sum(Number))
+
+Lumped_Seeds_SPP_date <- Seed_Data_Date %>% 
+                        filter(!grepl('UNK',SPP6)) %>% 
+                        filter(!grepl('PANICUM?',SPP6)) %>% 
+                        group_by(Plot, Transect, SPP6, `Sampling Date`) %>% 
                         summarize(totseeds = sum(Number))
 
 
-# Full join species data frame so native species can be filtered 
-
-# For looking at species richness over time
-
-Lumped_Seeds_SPP <- full_join(Lumped_Seeds_SPP, Species_data)
-
 # For looking at total species richness
-Seed_Data_Lumped <- full_join(Seed_Data_Lumped, Species_data)
+Seed_Data_Lumped <- full_join(Lumped_Seeds_SPP, Species_data)
+
+Lumped_Seeds_SPP_date <- full_join(Lumped_Seeds_SPP_date , Species_data)
 
 # Count the total number of distinct species per site according to unique transect 
 
@@ -630,20 +631,23 @@ Native_Uni_Seed_Diversity <- Seed_Data_Lumped %>%
 
 
 # Count the total number of distinct species per site according to sampling date
-week_species_counts <- Lumped_Seeds_SPP  %>% 
+week_species_counts <- Lumped_Seeds_SPP_date  %>% 
+                  filter(!grepl('UNK',SPP6)) %>% 
+                  filter(!grepl('PANICUM?',SPP6)) %>% 
                   group_by(Plot, `Sampling Date`) %>% 
                   summarize(Species_richness = n_distinct(SPP6))
 
 # Count the number of distinct native species per site according to sampling date
 
-native_week_species_counts <- Lumped_Seeds_SPP  %>% 
+native_week_species_counts <- Lumped_Seeds_SPP_date   %>% 
                   filter(Provenance == "Native") %>% 
                   group_by(Plot, `Sampling Date`) %>% 
-                  summarize(Species_richness = n_distinct(SPP6))
+                  summarize(N_Species_richness = n_distinct(SPP6))
 ```
 
-### Analysis 4: Fitting the models
 
+
+### Analysis 4: Fitting the models
 
 #### Total Species Richness
 
@@ -651,8 +655,8 @@ native_week_species_counts <- Lumped_Seeds_SPP  %>%
 
 
 # Make Tucker Prairie the reference level
-Uni_Seed_Diversity$Plot <- factor(Uni_Seed$Plot, levels=c("TP", "PFCA 1", "PFCA 2", "PFCA 3"))
-str(Uni_Seed$Plot)
+Uni_Seed_Diversity$Plot <- factor(Uni_Seed_Diversity$Plot, levels=c("TP", "PFCA 1", "PFCA 2", "PFCA 3"))
+str(Uni_Seed_Diversity$Plot)
 
 
 
@@ -692,9 +696,9 @@ emmeans::emmeans(Poisson_sr, "Plot", type = "response")
 
 ## Make a new dataframe to hold the model estimates and 95% confidence interval bounds
 
-response.sr <- c(31.2, 36.5, 41.8, 27.6)
-lower.sr <- c(27.9, 32.9, 38.0, 24.5)
-upper.sr <- c(34.9, 40.4, 46.0, 31.1)
+response.sr <- c(29.9, 35.8, 40.9, 27.2)
+lower.sr <- c(26.7, 32.3, 37.1, 24.2)
+upper.sr <- c(33.5, 39.5, 45.1, 30.6)
 site <- c("TP", "PFCA 1", "PFCA 2", "PFCA 3")
 
 Poisson.sr.est <- data.frame(site, response.sr ,lower.sr, upper.sr)
@@ -747,9 +751,9 @@ emmeans::emmeans(Poisson_sr_native, "Plot", type = "response")
 
 ## Make a new dataframe to hold the model estimates and 95% confidence interval bounds
 
-response.sr.native <- c(27, 28, 33, 24)
-lower.sr.native <- c(24, 25.0, 30, 21)
-upper.sr.native <- c(30, 32, 37, 27)
+response.sr.native <- c(26.9, 28.1, 33.0, 24.1)
+lower.sr.native <- c(23.9, 25.0, 29.6, 21.2)
+upper.sr.native <- c(30.3, 31.6, 36.8, 27.3)
 site <- c("TP", "PFCA 1", "PFCA 2", "PFCA 3")
 
 Poisson.sr.est.native <- data.frame(site, response.sr.native, lower.sr.native, upper.sr.native)
@@ -761,6 +765,8 @@ Poisson.sr.est.native <- data.frame(site, response.sr.native, lower.sr.native, u
 #### Total Species Richness
 
 ```{r, message = FALSE, echo = FALSE, warning = FALSE}
+
+
 Uni_Seed_Diversity$Plot <- factor(Uni_Seed$Plot, levels=c("PFCA 1", "PFCA 2", "PFCA 3", "TP"))
 
 
@@ -768,26 +774,27 @@ Poisson.sr.est$site <- factor(Poisson.sr.est$site, levels=c("PFCA 1", "PFCA 2", 
 
 SR.plot <- ggplot(data=Uni_Seed_Diversity)+
   geom_jitter(data=Uni_Seed_Diversity, aes(x=Plot, y=Species_richness, color = Plot), show.legend = FALSE, width = .2, size = 2) +
-  geom_point(data = Poisson.sr.est, aes(x=site, y=response.sr), show.legend = FALSE, size = 2.5)+
+  geom_point(data = Poisson.sr.est, aes(x=site, y=response.sr), show.legend = FALSE, size = 3.5)+
   geom_errorbar(data = Poisson.sr.est, aes(x= site, y = response.sr, ymin = lower.sr, ymax = upper.sr), width = 0.15, cex = 0.75)+
   theme_classic()+
-  xlab("Site")+
+  xlab("")+
   ylim(0,60)+
-  ylab("Total species richness")+
+  ylab("Total richness")+
   scale_x_discrete(labels = c ("PFCA 1" = "Young", "PFCA 2" = "Middle", "PFCA 3" = "Old", "TP" = "Remnant"), guide = guide_axis(angle = 0)) +
   scale_color_manual(name = "Site", values=c( "#1f78b4", "#a6cee3", "#b2df8a","#33a02c"), breaks=c("PFCA 1", "PFCA 2", "PFCA 3", "TP"), labels = c("Young", "Middle", "Old", "Remnant"))+
- theme(text=element_text(size=16), legend.key.size=unit(1, "cm"))
-SR.plot +  annotate("text", x = 2 , y = 55, label = "*", size = 9.5)+
+ theme(text=element_text(size=14), legend.key.size=unit(1, "cm"))
+
+SR.plot.annotated <- SR.plot +  annotate("text", x = 2 , y = 55, label = "*", size = 9.5)+
   geom_vline(xintercept = 3.5, linetype = "longdash")
 
 
 ```
 
-**Figure 4**: The morphospecies richness of seed rain captured per transect in the remnant prairie and the young (2-year-old), middle-aged (6-7-year-old), and old (15-year-old) reconstructed prairies between May 31st and December 12th, 2019. Sites sharing the same letter did not have significantly different amounts of seeds captured from the remnant (p \< 0.05).
 
+
+**Figure 4**: The morphospecies richness of seed rain captured per transect in the remnant prairie (dark green) and the young (2-year-old, dark blue), middle-aged (6-7-year-old, light blue), and old (15-year-old, light green) reconstructed prairies between May 31st and December 12th, 2019. Error bars represent 95% confidence intervals around model estimates (black). Asterisk symbols indicate sites that had significantly different amounts of seeds captured when compared to the remnant prairie (p \< 0.05).
 
 #### Native Species Richness
-
 
 ```{r, message = FALSE, echo = FALSE, warning = FALSE}
 
@@ -798,23 +805,25 @@ Poisson.sr.est.native$site <- factor(Poisson.sr.est.native$site, levels=c("PFCA 
 
 Native.SR.plot <- ggplot()+
   geom_jitter(data=Native_Uni_Seed_Diversity, aes(x=Plot, y=Species_richness, color = Plot), show.legend = FALSE, width = .2, size = 2) +
-  geom_point(data = Poisson.sr.est.native, aes(x=site, y=response.sr.native), show.legend = FALSE, size = 2.5)+
+  geom_point(data = Poisson.sr.est.native, aes(x=site, y=response.sr.native), show.legend = FALSE, size = 3.5)+
   geom_errorbar(data = Poisson.sr.est.native, aes(x= site, y = response.sr.native, ymin = lower.sr.native, ymax = upper.sr.native), width = 0.15, cex = 0.75)+
   theme_classic()+
-  xlab("Site")+
+  xlab("")+
   ylim(0,60)+
-  ylab("Native species richness")+
+  ylab("Native richness")+
   scale_x_discrete(labels = c ("PFCA 1" = "Young", "PFCA 2" = "Middle", "PFCA 3" = "Old", "TP" = "Remnant"), guide = guide_axis(angle = 0)) +
   scale_color_manual(name = "Site", values=c( "#1f78b4", "#a6cee3", "#b2df8a","#33a02c"), breaks=c("PFCA 1", "PFCA 2", "PFCA 3", "TP"), labels = c("Young", "Middle", "Old", "Remnant"))+
- theme(text=element_text(size=16), legend.key.size=unit(1, "cm"))
+ theme(text=element_text(size=14), legend.key.size=unit(1, "cm"))
 
 
 
-Native.SR.plot +  annotate("text", x = 2 , y = 45, label = "*", size = 9.5)+
+Native.SR.plot.annotated <- Native.SR.plot +  annotate("text", x = 2 , y = 45, label = "*", size = 9.5)+
   geom_vline(xintercept = 3.5, linetype = "longdash")
 
 
 ```
+
+**Figure 5**: The native morphospecies richness of seed rain captured per transect in the remnant prairie (dark green) and the young (2-year-old, dark blue), middle-aged (6-7-year-old, light blue), and old (15-year-old, light green) reconstructed prairies between May 31st and December 12th, 2019. Error bars represent 95% confidence intervals around model estimates (black). Asterisk symbols indicate sites that had significantly different amounts of seeds captured when compared to the remnant prairie (p \< 0.05).
 
 
 
@@ -825,17 +834,17 @@ Native.SR.plot +  annotate("text", x = 2 , y = 45, label = "*", size = 9.5)+
 
 # setwd("~/Desktop/Seed Rain 2019/Graphics")
 Tot_SR_fig <- ggplot(week_species_counts, aes(y=Species_richness, x=`Sampling Date`, group=Plot)) +
-  geom_line(aes(colour=Plot), size = 1.5) +
-  geom_point(aes(shape=Plot, fill=Plot), size=3)+
+  geom_line(aes(colour=Plot), size = 1.5,  show.legend = FALSE) +
+  geom_point(aes(shape=Plot, fill=Plot), size=3,  show.legend = FALSE)+
   scale_color_manual(name = "", values=c("#1f78b4", "#a6cee3", "#b2df8a", "#33a02c"), breaks=c("PFCA 1", "PFCA 2", "PFCA 3", "TP"), labels = c("Young", "Middle", "Old", "Remnant 2019"))+
     scale_fill_manual(name = "", values=c("#1f78b4", "#a6cee3", "#b2df8a", "#33a02c"), breaks=c("PFCA 1", "PFCA 2", "PFCA 3", "TP"), labels = c("Young", "Middle", "Old", "Remnant 2019"))+
   scale_shape_manual(name = "", values=c(23,24,22,21),breaks=c("PFCA 1", "PFCA 2", "PFCA 3", "TP"), labels = c("Young", "Middle", "Old", "Remnant 2019")) +
   theme_classic()+
   ylim(0,60)+
   scale_x_datetime(date_breaks = '1 month', date_labels="%b %d", limits=as.POSIXct(c("2019-06-10", "2020-01-01")))+
-  theme(text=element_text(size=16), legend.key.size=unit(1, "cm"))+
-  ylab("Total species richness")+
-  xlab("Date")+
+  theme(text=element_text(size=14), legend.key.size=unit(1, "cm"))+
+  ylab("Total richness")+
+  xlab("")+
   guides(x = guide_axis(angle = 45))
 
 
@@ -843,59 +852,76 @@ Tot_SR_fig
 
 ```
 
-**Figure 5**: Total morphospecies richness of identified seeds for reconstructed and remnant tallgrass prairies during the study period (May 31 to December 12th, 2019).
-
-
+**Figure 6**: Total morphospecies richness of identified seeds for reconstructed and remnant tallgrass prairies during the study period (May 31 to December 12th, 2019).
 
 #### Native Species Richness Over Time
+
 ```{r, message = FALSE, echo = FALSE, warning = FALSE}
 
 
 # setwd("~/Desktop/Seed Rain 2019/Graphics")
-Tot_SR_fig <- ggplot(native_week_species_counts, aes(y=Species_richness, x=`Sampling Date`, group=Plot)) +
+Tot_N_SR_fig <- ggplot(native_week_species_counts, aes(y=N_Species_richness, x=`Sampling Date`, group=Plot)) +
   geom_line(aes(colour=Plot), size = 1.5) +
   geom_point(aes(shape=Plot, fill=Plot), size=3)+
-  scale_color_manual(name = "", values=c("#1f78b4", "#a6cee3", "#b2df8a", "#33a02c"), breaks=c("PFCA 1", "PFCA 2", "PFCA 3", "TP"), labels = c("Young", "Middle", "Old", "Remnant 2019"))+
-    scale_fill_manual(name = "", values=c("#1f78b4", "#a6cee3", "#b2df8a", "#33a02c"), breaks=c("PFCA 1", "PFCA 2", "PFCA 3", "TP"), labels = c("Young", "Middle", "Old", "Remnant 2019"))+
-  scale_shape_manual(name = "", values=c(23,24,22,21),breaks=c("PFCA 1", "PFCA 2", "PFCA 3", "TP"), labels = c("Young", "Middle", "Old", "Remnant 2019")) +
+  scale_color_manual(name = "", values=c("#1f78b4", "#a6cee3", "#b2df8a", "#33a02c"), breaks=c("PFCA 1", "PFCA 2", "PFCA 3", "TP"), labels = c("Young", "Middle", "Old", "Remnant"))+
+    scale_fill_manual(name = "", values=c("#1f78b4", "#a6cee3", "#b2df8a", "#33a02c"), breaks=c("PFCA 1", "PFCA 2", "PFCA 3", "TP"), labels = c("Young", "Middle", "Old", "Remnant"))+
+  scale_shape_manual(name = "", values=c(23,24,22,21),breaks=c("PFCA 1", "PFCA 2", "PFCA 3", "TP"), labels = c("Young", "Middle", "Old", "Remnant")) +
   theme_classic()+
   ylim(0,60)+
   scale_x_datetime(date_breaks = '1 month', date_labels="%b %d", limits=as.POSIXct(c("2019-06-10", "2020-01-01")))+
-  theme(text=element_text(size=16), legend.key.size=unit(1, "cm"))+
-  ylab("Native species richness")+
-  xlab("Date")+
+  theme(text=element_text(size=14), legend.key.size=unit(0.5, "cm"))+
+  ylab("Native richness")+
+  xlab("")+
   guides(x = guide_axis(angle = 45))
 
 
-Tot_SR_fig 
+Tot_N_SR_fig 
 
 ```
 
-**Results :** Morphospecies richness was only significantly greater in the middle-aged prairie (6-7-year-old prairie) compared to the remnant. Overall, morphospecies richness trended upward during the study period, with more morphospecies captured in the late fall than in the summer.
+**Figure 7**: Native morphospecies richness of identified seeds for reconstructed and remnant tallgrass prairies during the study period (May 31 to December 12th, 2019).
+
+```{r}
+legend <- get_legend(Tot_N_SR_fig)
+```
+
+```{r}
+panel_1 <- plot_grid(SR.plot.annotated, Native.SR.plot.annotated,Tot_SR_fig,Tot_N_SR_fig + theme(legend.position = 'none'),
+          labels=c("A","B","C","D", ""), ncol = 2)
+
+plot_grid(panel_1 , legend, rel_widths = c(3,.5), rel_heights = c(1,1,1.25,1.25, 2))
+
+```
+
+
+**Results :** Total and native morphospecies richness was only significantly greater in the middle-aged prairie (6-7-year-old prairie) compared to the remnant. Overall, morphospecies richness trended upward during the study period, with more morphospecies captured in the late fall than in the summer.
+
 
 
 ## Analysis 5: Supplemental table to assist in cross study comparison
 
 ```{r}
-Lumped_unknown1 <- Lumped_Seeds_SPP %>% 
+Lumped_unknown1 <- Seed_Data_Date  %>% 
   filter(grepl('UNK',SPP6)) %>% 
   group_by(Plot, `Sampling Date`) %>% 
-                        summarize(totseeds = sum(totseeds))
+                        summarize(totseeds = sum(Number))
 
-Lumped_unknown2 <- Lumped_Seeds_SPP %>% 
+Lumped_unknown2 <- Seed_Data_Date %>% 
   filter(grepl('PANICUM?',SPP6)) %>% 
   group_by(Plot, `Sampling Date`) %>% 
-                        summarize(totseeds = sum(totseeds))
+                        summarize(totseeds = sum(Number))
 
 Lumped_unknown <- full_join(Lumped_unknown1, Lumped_unknown2)
 
 Lumped_unknown$SPP6 <- rep("UNKSPP", 24)
 
-Lumped_no_unknown <- Lumped_Seeds_SPP %>% 
-   filter(!grepl('UNK',SPP6))
+Lumped_no_unknown <- Seed_Data_Date %>% 
+   filter(!grepl('UNK',SPP6)) 
 
-Lumped_no_unknown <- Lumped_no_unknown  %>% 
-   filter(!grepl('PANICUM?',SPP6))
+Lumped_no_unknown <- Seed_Data_Date  %>% 
+   filter(!grepl('PANICUM?',SPP6)) %>%
+    group_by(Plot, `Sampling Date`, SPP6) %>% 
+                        summarize(totseeds = sum(Number))
 
 full_SPP6_Date <- full_join(Lumped_unknown, Lumped_no_unknown)
 
@@ -905,8 +931,6 @@ full_SPP6_Date_TOT <- full_SPP6_Date %>%
                         summarize(totseeds = sum(totseeds))
 
 ```
-
-
 
 
 ```{r}
@@ -943,4 +967,48 @@ ft
 
 
 
+```
+
+
+```{r}
+# Species lists for each site
+
+### How many species at each site?
+
+all_species <- Seed_Data_Lumped %>% 
+  group_by(Plot)  %>% 
+   summarize(Species_richness = n_distinct(SPP6))
+
+all_species
+
+### Species found at TP
+
+TP_species <- Seed_Data_Lumped %>% 
+  filter(Plot == "TP") %>% 
+  group_by(Plot, SPP6)  %>% 
+   summarize(tot = sum(totseeds))
+
+
+### Species found at PFCA 1
+
+PFCA1_species <- Seed_Data_Lumped %>% 
+  filter(Plot == "PFCA 1") %>% 
+  group_by(Plot, SPP6)  %>% 
+   summarize(tot = sum(totseeds))
+
+### Species found at PFCA 2
+
+PFCA2_species <- Seed_Data_Lumped %>% 
+  filter(Plot == "PFCA 2") %>% 
+  group_by(Plot, SPP6)  %>% 
+   summarize(tot = sum(totseeds))
+
+
+### Species found at PFCA 3
+
+
+PFCA3_species <- Seed_Data_Lumped %>% 
+  filter(Plot == "PFCA 3") %>% 
+  group_by(Plot, SPP6)  %>% 
+   summarize(tot = sum(totseeds))
 ```
