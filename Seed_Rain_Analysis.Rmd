@@ -103,6 +103,8 @@ library(flextable)
 # Function that allows me to export tables to word
 library(officer)
 
+# Function that gets means, sds, etc. easily
+library(mosaic)
 ```
 
 ```{r, eval=TRUE, echo=FALSE, warning=TRUE, message=FALSE}
@@ -759,6 +761,48 @@ site <- c("TP", "PFCA 1", "PFCA 2", "PFCA 3")
 Poisson.sr.est.native <- data.frame(site, response.sr.native, lower.sr.native, upper.sr.native)
 
 ```
+
+#### Shannon Diversity
+
+```{r, echo = FALSE, results = 'hide', message = FALSE, warning = FALSE}
+
+# Shannon's Diversity
+
+shannon_com_mat <- spread(Lumped_Seeds_SPP, SPP6, totseeds, fill = 0)
+
+#Calculate Shannon's Diversity
+
+Shannon <- diversity(shannon_com_mat[,-c(1,2)], index="shannon")
+
+# Make it into a dataframe
+Shannon <- as.data.frame(Shannon)
+
+# Add back the column with the site labels
+Shannon$Site <- seed_com[,1]
+
+favstats(Shannon$Shannon~Shannon$Site)
+
+```
+
+```{r}
+
+# Make Tucker Prairie the reference level
+
+Shannon$Site <- factor(Shannon$Site, levels=c("TP", "PFCA 1", "PFCA 2", "PFCA 3"))
+
+Shannon_sr <- lm(Shannon ~ Site, data = Shannon)
+summary(Shannon_sr)
+anova(Shannon_sr)
+
+
+standardize <- emmeans(Shannon_sr, "Site")
+contrast(standardize, "trt.vs.ctrl")
+
+
+```
+
+
+
 
 ### Analysis 4: Data visualization
 
