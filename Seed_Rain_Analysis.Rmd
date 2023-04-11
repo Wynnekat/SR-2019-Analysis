@@ -696,9 +696,9 @@ emmeans::emmeans(Poisson_sr, "Plot", type = "response")
 
 ## Make a new dataframe to hold the model estimates and 95% confidence interval bounds
 
-response.sr <- c(29.9, 35.8, 40.9, 27.2)
-lower.sr <- c(26.7, 32.3, 37.1, 24.2)
-upper.sr <- c(33.5, 39.5, 45.1, 30.6)
+response.sr <- c(29.5, 35.8, 40.9, 27.2)
+lower.sr <- c(26.3, 32.3, 37.1, 24.2)
+upper.sr <- c(33.1, 39.7, 45.1, 30.6)
 site <- c("TP", "PFCA 1", "PFCA 2", "PFCA 3")
 
 Poisson.sr.est <- data.frame(site, response.sr ,lower.sr, upper.sr)
@@ -751,9 +751,9 @@ emmeans::emmeans(Poisson_sr_native, "Plot", type = "response")
 
 ## Make a new dataframe to hold the model estimates and 95% confidence interval bounds
 
-response.sr.native <- c(26.9, 28.1, 33.0, 24.1)
-lower.sr.native <- c(23.9, 25.0, 29.6, 21.2)
-upper.sr.native <- c(30.3, 31.6, 36.8, 27.3)
+response.sr.native <- c(27.4, 28.1, 33.0, 24.1)
+lower.sr.native <- c(24.3, 25.0, 29.6, 21.2)
+upper.sr.native <- c(30.8, 31.6, 36.8, 27.3)
 site <- c("TP", "PFCA 1", "PFCA 2", "PFCA 3")
 
 Poisson.sr.est.native <- data.frame(site, response.sr.native, lower.sr.native, upper.sr.native)
@@ -762,7 +762,7 @@ Poisson.sr.est.native <- data.frame(site, response.sr.native, lower.sr.native, u
 
 ### Analysis 4: Data visualization
 
-#### Total Species Richness
+#### Species Richness
 
 ```{r, message = FALSE, echo = FALSE, warning = FALSE}
 
@@ -784,17 +784,13 @@ SR.plot <- ggplot(data=Uni_Seed_Diversity)+
   scale_color_manual(name = "Site", values=c( "#1f78b4", "#a6cee3", "#b2df8a","#33a02c"), breaks=c("PFCA 1", "PFCA 2", "PFCA 3", "TP"), labels = c("Young", "Middle", "Old", "Remnant"))+
  theme(text=element_text(size=14), legend.key.size=unit(1, "cm"))
 
-SR.plot.annotated <- SR.plot +  annotate("text", x = 2 , y = 55, label = "*", size = 9.5)+
+SR.plot.annotated <- SR.plot +  annotate("text", x = c(1,2) , y = 55, label = "*", size = 9.5)+
   geom_vline(xintercept = 3.5, linetype = "longdash")
 
 
 ```
 
 
-
-**Figure 4**: The morphospecies richness of seed rain captured per transect in the remnant prairie (dark green) and the young (2-year-old, dark blue), middle-aged (6-7-year-old, light blue), and old (15-year-old, light green) reconstructed prairies between May 31st and December 12th, 2019. Error bars represent 95% confidence intervals around model estimates (black). Asterisk symbols indicate sites that had significantly different amounts of seeds captured when compared to the remnant prairie (p \< 0.05).
-
-#### Native Species Richness
 
 ```{r, message = FALSE, echo = FALSE, warning = FALSE}
 
@@ -823,11 +819,7 @@ Native.SR.plot.annotated <- Native.SR.plot +  annotate("text", x = 2 , y = 45, l
 
 ```
 
-**Figure 5**: The native morphospecies richness of seed rain captured per transect in the remnant prairie (dark green) and the young (2-year-old, dark blue), middle-aged (6-7-year-old, light blue), and old (15-year-old, light green) reconstructed prairies between May 31st and December 12th, 2019. Error bars represent 95% confidence intervals around model estimates (black). Asterisk symbols indicate sites that had significantly different amounts of seeds captured when compared to the remnant prairie (p \< 0.05).
 
-
-
-#### Total Species Richness Over Time
 
 ```{r, message = FALSE, echo = FALSE, warning = FALSE}
 
@@ -847,14 +839,9 @@ Tot_SR_fig <- ggplot(week_species_counts, aes(y=Species_richness, x=`Sampling Da
   xlab("")+
   guides(x = guide_axis(angle = 45))
 
-
-Tot_SR_fig 
-
 ```
 
-**Figure 6**: Total morphospecies richness of identified seeds for reconstructed and remnant tallgrass prairies during the study period (May 31 to December 12th, 2019).
 
-#### Native Species Richness Over Time
 
 ```{r, message = FALSE, echo = FALSE, warning = FALSE}
 
@@ -874,18 +861,15 @@ Tot_N_SR_fig <- ggplot(native_week_species_counts, aes(y=N_Species_richness, x=`
   xlab("")+
   guides(x = guide_axis(angle = 45))
 
-
-Tot_N_SR_fig 
-
 ```
 
-**Figure 7**: Native morphospecies richness of identified seeds for reconstructed and remnant tallgrass prairies during the study period (May 31 to December 12th, 2019).
+```{r, message = FALSE, echo = FALSE, warning = FALSE}
 
-```{r}
 legend <- get_legend(Tot_N_SR_fig)
 ```
 
-```{r}
+```{r, message = FALSE, echo = FALSE, warning = FALSE}
+
 panel_1 <- plot_grid(SR.plot.annotated, Native.SR.plot.annotated,Tot_SR_fig,Tot_N_SR_fig + theme(legend.position = 'none'),
           labels=c("A","B","C","D", ""), ncol = 2)
 
@@ -894,13 +878,14 @@ plot_grid(panel_1 , legend, rel_widths = c(3,.5), rel_heights = c(1,1,1.25,1.25,
 ```
 
 
-**Results :** Total and native morphospecies richness was only significantly greater in the middle-aged prairie (6-7-year-old prairie) compared to the remnant. Overall, morphospecies richness trended upward during the study period, with more morphospecies captured in the late fall than in the summer.
+**Results :** Mean total morphospecies richness was only significantly greater in the youngest and middle-aged prairie compared to the remnant. While only mean native morphospecies richness was greater in the middle-aged prairie. Overall, morphospecies richness trended upward during the study period, with more morphospecies captured in the late fall than in the summer.
 
 
 
 ## Analysis 5: Supplemental table to assist in cross study comparison
 
-```{r}
+```{r, message = FALSE, echo = FALSE, warning = FALSE}
+
 Lumped_unknown1 <- Seed_Data_Date  %>% 
   filter(grepl('UNK',SPP6)) %>% 
   group_by(Plot, `Sampling Date`) %>% 
@@ -933,7 +918,8 @@ full_SPP6_Date_TOT <- full_SPP6_Date %>%
 ```
 
 
-```{r}
+```{r, message = FALSE, echo = FALSE, warning = FALSE}
+
 # Per site
 seed_community_phenology_site <- spread(full_SPP6_Date, `Sampling Date`, totseeds, fill = 0)
 
@@ -959,7 +945,7 @@ ft
 
 ```
 
-```{r}
+```{r, message = FALSE, echo = FALSE, warning = FALSE}
 
 #read_docx() %>% 
   #body_add_flextable(value = ft) %>%  
@@ -970,7 +956,7 @@ ft
 ```
 
 
-```{r}
+```{r, message = FALSE, echo = FALSE, warning = FALSE}
 # Species lists for each site
 
 ### How many species at each site?
@@ -1012,3 +998,5 @@ PFCA3_species <- Seed_Data_Lumped %>%
   group_by(Plot, SPP6)  %>% 
    summarize(tot = sum(totseeds))
 ```
+
+
