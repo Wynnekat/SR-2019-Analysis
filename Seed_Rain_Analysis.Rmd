@@ -530,7 +530,7 @@ NMDS_plot <- ggplot(scrs) +
              arrow = arrow(length = unit(0.2, "cm")), colour = "#888888", alpha = 0.7) +
   geom_text_repel(data = spp.scrs.01, aes(x = NMDS1 * arrow_factor, y = NMDS2 * arrow_factor, 
                                           label = Species), size = 3, max.overlaps = getOption("ggrepel.max.overlaps", default = 50) ) +
-  annotate("text", x = -.90, y = 1.1, label = "bold(Stress) == 0.179",
+  annotate("text", x = -.90, y = 1.1, label = "bold(Stress) == 0.177",
   parse = TRUE)+
   annotate("text", x = -1.05, y = 1, label = "bold(K) == 2",
   parse = TRUE) +
@@ -566,7 +566,7 @@ seed_perma_mod_tot
 ```{r, message = FALSE, echo = FALSE, warning = FALSE}
 
 # Pairwise comparisons between sites
-pairwise.adonis2(data.dist.tot~as.factor(site), data=seed_com)
+pairwise.adonis2(data.dist.tot~as.factor(site), data=seed_com, p.adjust = "bonferroni")
 ```
 
 ### Analysis 3: Multivariate homogeneity of group dispersions test
@@ -629,7 +629,7 @@ Native_Uni_Seed_Diversity <- Seed_Data_Lumped %>%
   filter(Provenance == "Native") %>% 
   unite("UniqueTran", Plot:Transect, sep = "_", remove = FALSE) %>% 
   group_by(Plot, Transect, UniqueTran)  %>% 
-   summarize(Species_richness = n_distinct(SPP6))
+   summarize(n_Species_richness = n_distinct(SPP6))
 
 
 # Count the total number of distinct species per site according to sampling date
@@ -681,6 +681,7 @@ str(Uni_Seed_Diversity$Plot)
 
 Poisson_sr <- glm(Species_richness ~ Plot, family = "poisson", data = Uni_Seed_Diversity)
 summary(Poisson_sr)
+
 ```
 
 ```{r, message = FALSE, echo = FALSE, warning = FALSE}
@@ -735,7 +736,7 @@ str(Native_Uni_Seed_Diversity$Plot)
 
 # Decided to use the Poisson 
 
-Poisson_sr_native <- glm(Species_richness ~ Plot, family = "poisson", data = Native_Uni_Seed_Diversity)
+Poisson_sr_native <- glm(n_Species_richness ~ Plot, family = "poisson", data = Native_Uni_Seed_Diversity)
 summary(Poisson_sr_native )
 ```
 
@@ -843,8 +844,8 @@ Native_Uni_Seed_Diversity$Plot <- factor(Native_Uni_Seed_Diversity$Plot, levels=
 
 Poisson.sr.est.native$site <- factor(Poisson.sr.est.native$site, levels=c("PFCA 1", "PFCA 2", "PFCA 3", "TP"))
 
-Native.SR.plot <- ggplot()+
-  geom_jitter(data=Native_Uni_Seed_Diversity, aes(x=Plot, y=Species_richness, color = Plot), show.legend = FALSE, width = .2, size = 2) +
+Native.SR.plot.annotated <- ggplot()+
+  geom_jitter(data=Native_Uni_Seed_Diversity, aes(x=Plot, y=n_Species_richness, color = Plot), show.legend = FALSE, width = .2, size = 2) +
   geom_point(data = Poisson.sr.est.native, aes(x=site, y=response.sr.native), show.legend = FALSE, size = 3.5)+
   geom_errorbar(data = Poisson.sr.est.native, aes(x= site, y = response.sr.native, ymin = lower.sr.native, ymax = upper.sr.native), width = 0.15, cex = 0.75)+
   theme_classic()+
@@ -856,9 +857,7 @@ Native.SR.plot <- ggplot()+
  theme(text=element_text(size=14), legend.key.size=unit(1, "cm"))
 
 
-
-Native.SR.plot.annotated <- Native.SR.plot +  annotate("text", x = 2 , y = 45, label = "*", size = 9.5)+
-  geom_vline(xintercept = 3.5, linetype = "longdash")
+Native.SR.plot.annotated <- Native.SR.plot.annotated + geom_vline(xintercept = 3.5, linetype = "longdash")
 
 
 ```
@@ -915,9 +914,10 @@ legend <- get_legend(Tot_N_SR_fig)
 ```{r, message = FALSE, echo = FALSE, warning = FALSE}
 
 panel_1 <- plot_grid(SR.plot.annotated, Native.SR.plot.annotated,Tot_SR_fig,Tot_N_SR_fig + theme(legend.position = 'none'),
-          labels=c("A","B","C","D", ""), ncol = 2)
+          labels=c("A","B","C","D", ncol = 2),
+          rel_heights = c(0.9,1))
 
-plot_grid(panel_1 , legend, rel_widths = c(3,.5), rel_heights = c(1,1,1.25,1.25, 2))
+plot_grid(panel_1 , legend, rel_widths = c(3,.5), rel_heights = c(1,2))
 
 ```
 
@@ -947,7 +947,7 @@ Lumped_unknown$SPP6 <- rep("UNKSPP", 24)
 Lumped_no_unknown <- Seed_Data_Date %>% 
    filter(!grepl('UNK',SPP6)) 
 
-Lumped_no_unknown <- Seed_Data_Date  %>% 
+Lumped_no_unknown <- Lumped_no_unknown  %>% 
    filter(!grepl('PANICUM?',SPP6)) %>%
     group_by(Plot, `Sampling Date`, SPP6) %>% 
                         summarize(totseeds = sum(Number))
@@ -960,6 +960,25 @@ full_SPP6_Date_TOT <- full_SPP6_Date %>%
                         summarize(totseeds = sum(totseeds))
 
 ```
+
+```{r}
+Lumped_full_SPP6 <- full_SPP6_Date %>%
+                         group_by(Plot, SPP6) %>% 
+                         summarize(totseeds = sum(totseeds))
+  
+Lumped_full_SPP6_nu <- Lumped_full_SPP6 %>% 
+   filter(!grepl('UNK',SPP6)) %>% 
+   summarize(totseeds = sum(totseeds))
+   
+Lumped_full_SPP6_u <- Lumped_full_SPP6 %>% 
+   filter(grepl('UNK',SPP6))
+
+
+Lumped_full_SPP6_nu$percent_known <- 100-(Lumped_full_SPP6_u$totseeds / Lumped_full_SPP6_nu$totseeds)*100
+
+Lumped_full_SPP6_nu
+```
+
 
 
 ```{r, message = FALSE, echo = FALSE, warning = FALSE}
