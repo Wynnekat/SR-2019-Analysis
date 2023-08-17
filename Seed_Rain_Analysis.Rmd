@@ -1063,3 +1063,10 @@ PFCA3_species <- Seed_Data_Lumped %>%
 ```
 
 
+```{r}
+
+SPP6_Frequency <- full_SPP6_Date %>% 
+                        group_by(SPP6,) %>% 
+                        summarize(totseeds = sum(totseeds))
+
+```
