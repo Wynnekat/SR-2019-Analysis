@@ -924,12 +924,79 @@ plot_grid(panel_1 , legend, rel_widths = c(3,.5), rel_heights = c(1,2))
 
 **Results :** Mean total morphospecies richness was only significantly greater in the youngest and middle-aged prairie compared to the remnant. While only mean native morphospecies richness was greater in the middle-aged prairie. Overall, morphospecies richness trended upward during the study period, with more morphospecies captured in the late fall than in the summer.
 
-## Analysis 4: CWM seed mass 
+## Analysis 5: CWM seed mass 
 
 
+```{r}
+# Only with most frequently captured species
+
+Most_Frequently_Captured <- Seed_Data_Lumped %>% 
+  group_by(SPP6) %>% 
+  summarize(totseeds = sum(totseeds)) %>% 
+  filter(totseeds >= 50)
+
+Most_Frequently_Captured <- Most_Frequently_Captured[,-2]
 
 
+Most_Frequently_Captured_data <- left_join(Most_Frequently_Captured, 
+Seed_Data_Lumped, multiple = "all")
+```
 
+```{r}
+# Only use the most common species (> 50 seeds captured over the course of the study = top 60 most frequently caught species)
+
+
+test <- Most_Frequently_Captured_data %>% 
+  group_by(Plot, Transect) %>% 
+  summarize(weighted_seed_mass = weighted.mean(Mean_1_Seed_Mass_g, totseeds))
+  
+
+```
+
+
+```{r}
+# All species but the ones we don't have weights for
+
+## Eleocharis spp and spp1
+## OENFIL
+## RUBSPP
+
+
+All_Captured <- Seed_Data_Lumped %>% 
+  filter(Mean_1_Seed_Mass_g >= 0)
+
+
+# Only use the most common species (> 50 seeds captured over the course of the study = top 60 most frequently caught species)
+
+
+test2 <-All_Captured  %>% 
+  group_by(Plot, Transect) %>% 
+  summarize(weighted_seed_mass = weighted.mean(Mean_1_Seed_Mass_g, totseeds))
+  
+
+```
+
+
+```{r}
+# Very similar trends
+
+plot(test$weighted_seed_mass*1000~test$Plot)
+
+
+plot(test2$weighted_seed_mass*1000~test2$Plot)
+```
+
+```{r}
+All_Captured_Sum <- All_Captured %>% 
+  group_by(Plot, SPP6, Mean_1_Seed_Mass_g) %>% 
+  summarize(totseeds = sum(totseeds))
+
+All_Captured_Sum$Mean_1_Seed_Mass_mg <- All_Captured_Sum$Mean_1_Seed_Mass_g *1000
+  
+ggplot(All_Captured_Sum, aes(x = Mean_1_Seed_Mass_g, y = totseeds, color = Plot)) +
+  geom_point()
+  geom_smooth(method = "lm")
+```
 
 ## Analysis 6: Supplemental table to assist in cross study comparison
 
