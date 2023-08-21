@@ -927,6 +927,8 @@ plot_grid(panel_1 , legend, rel_widths = c(3,.5), rel_heights = c(1,2))
 ## Analysis 5: CWM seed mass 
 
 
+#### CWM seed mass
+
 ```{r}
 # Only with most frequently captured species
 
@@ -941,6 +943,7 @@ Most_Frequently_Captured <- Most_Frequently_Captured[,-2]
 Most_Frequently_Captured_data <- left_join(Most_Frequently_Captured, 
 Seed_Data_Lumped, multiple = "all")
 ```
+
 
 ```{r}
 # Only use the most common species (> 50 seeds captured over the course of the study = top 60 most frequently caught species)
@@ -969,34 +972,282 @@ All_Captured <- Seed_Data_Lumped %>%
 # Only use the most common species (> 50 seeds captured over the course of the study = top 60 most frequently caught species)
 
 
-test2 <-All_Captured  %>% 
+All_CWM <-All_Captured  %>% 
   group_by(Plot, Transect) %>% 
-  summarize(weighted_seed_mass = weighted.mean(Mean_1_Seed_Mass_g, totseeds))
-  
+  summarize(weighted_seed_mass = weighted.mean((Mean_1_Seed_Mass_g*1000), totseeds))
+
+
+```
+
+```{r}
+
+
+
+# Make Tucker Prairie (the remnant prairie) the reference level
+All_CWM$Plot <- factor(All_CWM$Plot, levels=c("TP", "PFCA 1", "PFCA 2", "PFCA 3"))
+str(All_CWM$Plot)
+
+
+# Fit a gamma distribution model predicting the amount of seed biomass per sit
+
+# Fit a gamma log link model predicting CWM 
+#mod.gamma.log.CWM <- glm(weighted_seed_mass~Plot, family = Gamma(link = "log"), data=All_CWM)
+
+# Fit a gamma inverse link model predicting CWM 
+#mod.gamma.inv.CWM <- glm(weighted_seed_mass~Plot, family = Gamma(link = "inverse"), data=All_CWM)
+
+
+# Fit a Gaussian model predicting CWM 
+mod.gaussian.CWM <- glm(weighted_seed_mass~Plot, family = gaussian, data=All_CWM)
+
+# Summary results of model
+### Dispersion = 1 since k was already estimated (see John Snyder's notes)
+
+
+#A regular linear model performs the best
+summary(mod.gaussian.CWM)$deviance
+#summary(mod.gamma.log.CWM)$deviance
+#summary(mod.gamma.inv.CWM)$deviance
+
+
+# No significant difference in CWM
+
+lm.CWM <- lm(weighted_seed_mass~Plot, data=All_CWM)
+car::Anova(lm.CWM, type = 3)
+
+
+```
+
+```{r}
+emmeans::emmeans(lm.CWM , "Plot", type = "response")
+
+response <- c(0.677, 0.850, 0.631, 0.886)
+lower <- c(0.407, 0.580, 0.361,  0.616)
+upper <- c(0.948, 1.120, 0.901, 1.156)
+site <- c("TP", "PFCA 1", "PFCA 2", "PFCA 3")
+
+
+lm.cwm.est <- data.frame(site, response, lower, upper)
 
 ```
 
 
 ```{r}
-# Very similar trends
 
-plot(test$weighted_seed_mass*1000~test$Plot)
+All_CWM$Plot <- factor(All_CWM$Plot, levels=c("PFCA 1", "PFCA 2", "PFCA 3", "TP"))
+str(All_CWM$Plot)
 
 
-plot(test2$weighted_seed_mass*1000~test2$Plot)
+ggplot() +
+  geom_jitter(data=All_CWM, aes(x=Plot, y=weighted_seed_mass, color = Plot), show.legend = FALSE, width = .2, size = 2) +
+  geom_point(data = lm.cwm.est , aes(x=site, y=response), show.legend = FALSE, size = 3.5)+
+  geom_errorbar(data = lm.cwm.est , aes(x= site, y = response, ymin = lower, ymax = upper), width = 0.15, cex = 0.75)+
+  theme_classic()+
+  xlab("Site")+
+  ylim(0,2.5)+
+  ylab("CWM seed mass (mg)")+
+  scale_x_discrete(labels = c ("PFCA 1" = "Young", "PFCA 2" = "Middle", "PFCA 3" = "Old", "TP" = "Remnant"), guide = guide_axis(angle = 0)) +
+  scale_color_manual(name = "Site", values=c( "#1f78b4", "#a6cee3", "#b2df8a","#33a02c"), breaks=c("PFCA 1", "PFCA 2", "PFCA 3", "TP"), labels = c("Young", "Middle", "Old", "Remnant"))+
+   scale_x_discrete(labels = c ("PFCA 1" = "Young", "PFCA 2" = "Middle", "PFCA 3" = "Old", "TP" = "Remnant"), guide = guide_axis(angle = 0)) +
+ theme(text=element_text(size=16), legend.key.size=unit(1, "cm"))+ geom_vline(xintercept = 3.5, linetype = "longdash")
+
+
 ```
+
+
+#### Seed Rain density vs. Seed mass (mg) [log 10 scale]
 
 ```{r}
 All_Captured_Sum <- All_Captured %>% 
   group_by(Plot, SPP6, Mean_1_Seed_Mass_g) %>% 
   summarize(totseeds = sum(totseeds))
 
-All_Captured_Sum$Mean_1_Seed_Mass_mg <- All_Captured_Sum$Mean_1_Seed_Mass_g *1000
-  
-ggplot(All_Captured_Sum, aes(x = Mean_1_Seed_Mass_g, y = totseeds, color = Plot)) +
-  geom_point()
-  geom_smooth(method = "lm")
+All_Captured_Sum$Mean_1_Seed_Mass_mg <- All_Captured_Sum$Mean_1_Seed_Mass_g * 1000
+
+All_Captured_Sum$Seed_Rain_Density <- All_Captured_Sum$totseeds / 0.5
 ```
+
+```{r}
+All_Captured_Sum_Lumped <- All_Captured_Sum %>% 
+  group_by(SPP6, Mean_1_Seed_Mass_g) %>% 
+  summarize(totseeds = sum(totseeds))
+
+
+All_Captured_Sum_Lumped$Density <- All_Captured_Sum_Lumped$totseeds * .5
+```
+
+```{r}
+options(scipen = 999)
+# Seed rain density vs. seed mass (mg)
+## Density = sum of all seeds captured for a species divided by total trapping area (2 m^2) 
+ggplot(All_Captured_Sum_Lumped, aes(x = Mean_1_Seed_Mass_g*1000, y = Density)) +
+  geom_point()+
+  scale_x_continuous(trans='log10') +
+  labs(x = "Seed mass (mg) [log 10 scale]", y = "Seed rain density")+
+  geom_smooth(method = "glm", method.args = list(family = Gamma(link = "log")))+
+  theme_classic()
+
+
+#mod.normal <- glm(log(Density) ~ log(Mean_1_Seed_Mass_mg), family = gaussian, data = All_Captured_Sum_Lumped)
+
+#mod.gamma.inv <- glm(Density~ log(Mean_1_Seed_Mass_mg), family = Gamma(link = inverse),  data = All_Captured_Sum_Lumped)
+
+
+mod.gamma.log <- glm(Density~ log10(Mean_1_Seed_Mass_g*1000), family = Gamma(link = log),  data = All_Captured_Sum_Lumped)
+
+summary(mod.gamma.log)
+
+
+### Gamma mod with log link is best
+
+#summary(mod.normal)$deviance
+#summary(mod.gamma.inv)$deviance
+summary(mod.gamma.log)$deviance
+
+
+```
+
+
+
+```{r}
+# Seed rain density vs. seed mass (mg)
+## Density = sum of all seeds captured for a species at each site divided by total trapping area at a site (0.5 m^2) 
+ggplot(All_Captured_Sum, aes(x = Mean_1_Seed_Mass_mg, y = Seed_Rain_Density, color = Plot)) +
+  geom_point()+
+  scale_x_continuous(trans='log10') +
+  geom_smooth(method = "glm.nb", se = FALSE) +
+   labs(x = "Seed mass (mg) [log scale]", y = "Seed rain density")+
+  theme_classic()
+  
+
+#mod.gaussian <- glm(log(Seed_Rain_Density) ~ log(Mean_1_Seed_Mass_mg)*Plot, family = gaussian, data=All_Captured_Sum)
+
+
+# Fit a negative binomial model predicting number of seeds by site
+mod.nb <- MASS::glm.nb(Seed_Rain_Density~log10(Mean_1_Seed_Mass_mg)*Plot, data=All_Captured_Sum)
+
+# Convert back to glm() style object  (look into this again you may not need to do it)
+mod.nb <- MASS::glm.convert(mod.nb)
+
+# Summary results of model
+### Dispersion = 1 since k was already estimated (see John Snyder's notes)
+summary(mod.nb, dispersion = 1)
+
+
+### Negative binomial model is FAR better
+
+#summary(mod.gaussian)$deviance
+#summary(mod.nb)$deviance
+
+
+### Ok so:
+
+#### More seeds in the youngest restoration 
+#### Negative relationship between seed rain density and seed mass 
+#### NO differences in the seed rain density and seed mass relationship between sites.
+
+
+```
+
+
+
+#### Seed Rain Biomass vs. Site
+
+
+```{r}
+All_Captured$Seed_Biomass_g <- All_Captured$Mean_1_Seed_Mass_g * All_Captured$totseeds
+
+
+All_Captured_Biomass <- All_Captured %>% 
+  group_by(Plot, Transect) %>% 
+  summarize(Seed_Biomass_g = sum(Seed_Biomass_g))
+
+
+# Right skewed 
+
+ggplot(All_Captured_Biomass, aes(x=Seed_Biomass_g)) + 
+  geom_histogram(color="black", fill="white")
+
+```
+
+
+
+
+```{r}
+
+
+
+# Make Tucker Prairie (the remnant prairie) the reference level
+All_Captured_Biomass$Plot <- factor(All_Captured_Biomass$Plot, levels=c("TP", "PFCA 1", "PFCA 2", "PFCA 3"))
+str(All_Captured$Plot)
+
+
+# Fit a gamma distribution model predicting the amount of seed biomass per sit
+
+# Fit a gamma model predicting number of seeds by site
+mod.gamma.biomass <- glm(Seed_Biomass_g~Plot, family = Gamma(link = "log"), data=All_Captured_Biomass)
+
+
+
+# Summary results of model
+### Dispersion = 1 since k was already estimated (see John Snyder's notes)
+summary(mod.gamma.biomass)
+
+
+
+```
+
+Posthoc comparisons between the remnant and reconstructed prairies.
+
+```{r, message = FALSE, echo = FALSE, warning = FALSE}
+
+## Do restored sites differ from the remnant?
+
+
+# Contrasts
+standardize.biomass <- emmeans(mod.gamma.biomass, "Plot")
+contrast(standardize.biomass, "trt.vs.ctrl")
+
+
+
+## 95% confidence intervals 
+
+emmeans::emmeans(mod.gamma.biomass, "Plot", type = "response")
+
+## Make a new dataframe to hold the model estimates and 95% confidence interval bounds
+
+response <- c(1.112, 4.371, 1.378, .882)
+lower <- c(.844, 3.320, 1.046,  0.670)
+upper <- c(1.46, 5.76, 1.81, 1.16)
+site <- c("TP", "PFCA 1", "PFCA 2", "PFCA 3")
+
+gamma.biomass.est <- data.frame(site, response, lower, upper)
+
+```
+
+
+```{r}
+
+# Make PFCA 1 (the youngest prairie) the reference level
+All_Captured_Biomass$Plot <- factor(All_Captured_Biomass$Plot, levels=c("PFCA 1", "PFCA 2", "PFCA 3", "TP"))
+str(All_Captured$Plot)
+
+
+ggplot() +
+  geom_jitter(data=All_Captured_Biomass, aes(x=Plot, y=Seed_Biomass_g, color = Plot), show.legend = FALSE, width = .2, size = 2) +
+  geom_point(data = gamma.biomass.est, aes(x=site, y=response), show.legend = FALSE, size = 3.5)+
+  geom_errorbar(data = gamma.biomass.est, aes(x= site, y = response, ymin = lower, ymax = upper), width = 0.15, cex = 0.75)+
+  theme_classic()+
+  xlab("Site")+
+  ylim(0,8)+
+  ylab("Seed rain biomass (g)")+
+  scale_x_discrete(labels = c ("PFCA 1" = "Young", "PFCA 2" = "Middle", "PFCA 3" = "Old", "TP" = "Remnant"), guide = guide_axis(angle = 0)) +
+  scale_color_manual(name = "Site", values=c( "#1f78b4", "#a6cee3", "#b2df8a","#33a02c"), breaks=c("PFCA 1", "PFCA 2", "PFCA 3", "TP"), labels = c("Young", "Middle", "Old", "Remnant"))+
+   scale_x_discrete(labels = c ("PFCA 1" = "Young", "PFCA 2" = "Middle", "PFCA 3" = "Old", "TP" = "Remnant"), guide = guide_axis(angle = 0)) +
+ theme(text=element_text(size=16), legend.key.size=unit(1, "cm"))+ geom_vline(xintercept = 3.5, linetype = "longdash")
+```
+
+
 
 ## Analysis 6: Supplemental table to assist in cross study comparison
 
