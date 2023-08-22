@@ -924,53 +924,60 @@ plot_grid(panel_1 , legend, rel_widths = c(3,.5), rel_heights = c(1,2))
 
 **Results :** Mean total morphospecies richness was only significantly greater in the youngest and middle-aged prairie compared to the remnant. While only mean native morphospecies richness was greater in the middle-aged prairie. Overall, morphospecies richness trended upward during the study period, with more morphospecies captured in the late fall than in the summer.
 
-## Analysis 5: CWM seed mass 
+## Analysis 5: Do differences in the quantity of seed rain reflect changes in seed mass traits as community assembly proceeds?
 
 
-#### CWM seed mass
 
-```{r}
+
+#### Community Weighted Mean (CWM) seed mass analysis 
+
+There was no significant change in CWM seed mass between sites, suggesting that differences in the quantity of seed rain is not related to changes in seed mass traits as community assembly proceeds and restored prairie communities mature. Therefore, the marked increase in seed rain abundance in younger communities is not because there are more small-seeded species dispersing in that community.  
+
+
+```{r, message = FALSE, echo = FALSE, warning = FALSE}
+
+## Old code
+### I'm keeping this code just in case I need it. I want to use the full data though since there are only 4 morphospecies I'm missing seed mass data for: Oenothera filliformis, Rubus spp., Eleocharis spp and Eleocharis spp1. I plan on weighing OENFIL and RUBSPP since we have enough seeds (> 20) in the reference collection and captured seed rain. I will only omit the two Eleocharis spp. morphospecies since there is 1) a paucity of published data for the Eleocharis species in the area and 2) we only caught one seed for each morphospecies. 
+
+
+### ----
+
 # Only with most frequently captured species
 
-Most_Frequently_Captured <- Seed_Data_Lumped %>% 
-  group_by(SPP6) %>% 
-  summarize(totseeds = sum(totseeds)) %>% 
-  filter(totseeds >= 50)
+#Most_Frequently_Captured <- Seed_Data_Lumped %>% 
+  #group_by(SPP6) %>% 
+  #summarize(totseeds = sum(totseeds)) %>% 
+  #filter(totseeds >= 50)
 
-Most_Frequently_Captured <- Most_Frequently_Captured[,-2]
-
-
-Most_Frequently_Captured_data <- left_join(Most_Frequently_Captured, 
-Seed_Data_Lumped, multiple = "all")
-```
+#Most_Frequently_Captured <- Most_Frequently_Captured[,-2]
 
 
-```{r}
+#Most_Frequently_Captured_data <- left_join(Most_Frequently_Captured, 
+#Seed_Data_Lumped, multiple = "all")
+
 # Only use the most common species (> 50 seeds captured over the course of the study = top 60 most frequently caught species)
 
 
-test <- Most_Frequently_Captured_data %>% 
-  group_by(Plot, Transect) %>% 
-  summarize(weighted_seed_mass = weighted.mean(Mean_1_Seed_Mass_g, totseeds))
+#test <- Most_Frequently_Captured_data %>% 
+  #group_by(Plot, Transect) %>% 
+  #summarize(weighted_seed_mass = weighted.mean(Mean_1_Seed_Mass_g, totseeds))
   
+
 
 ```
 
 
-```{r}
-# All species but the ones we don't have weights for
+```{r, message = FALSE, echo = FALSE, warning = FALSE}
 
-## Eleocharis spp and spp1
-## OENFIL
-## RUBSPP
-
+# Filter out the morphospecies we do not have seed mass data for
 
 All_Captured <- Seed_Data_Lumped %>% 
   filter(Mean_1_Seed_Mass_g >= 0)
 
 
-# Only use the most common species (> 50 seeds captured over the course of the study = top 60 most frequently caught species)
-
+# Get CWM seed mass data for all species captured at each transect for each site.
+### CWM seed mass = relative abundance and mass
+## Multiply by 1000 to convert from g to mg 
 
 All_CWM <-All_Captured  %>% 
   group_by(Plot, Transect) %>% 
@@ -979,13 +986,13 @@ All_CWM <-All_Captured  %>%
 
 ```
 
-```{r}
+```{r, message = FALSE, echo = FALSE, warning = FALSE}
 
 
 
 # Make Tucker Prairie (the remnant prairie) the reference level
 All_CWM$Plot <- factor(All_CWM$Plot, levels=c("TP", "PFCA 1", "PFCA 2", "PFCA 3"))
-str(All_CWM$Plot)
+#str(All_CWM$Plot)
 
 
 # Fit a gamma distribution model predicting the amount of seed biomass per sit
@@ -999,13 +1006,13 @@ str(All_CWM$Plot)
 
 # Fit a Gaussian model predicting CWM 
 mod.gaussian.CWM <- glm(weighted_seed_mass~Plot, family = gaussian, data=All_CWM)
+summary(mod.gaussian.CWM)
 
 # Summary results of model
-### Dispersion = 1 since k was already estimated (see John Snyder's notes)
 
 
 #A regular linear model performs the best
-summary(mod.gaussian.CWM)$deviance
+#summary(mod.gaussian.CWM)$deviance
 #summary(mod.gamma.log.CWM)$deviance
 #summary(mod.gamma.inv.CWM)$deviance
 
@@ -1018,7 +1025,8 @@ car::Anova(lm.CWM, type = 3)
 
 ```
 
-```{r}
+```{r, message = FALSE, echo = FALSE, warning = FALSE}
+
 emmeans::emmeans(lm.CWM , "Plot", type = "response")
 
 response <- c(0.677, 0.850, 0.631, 0.886)
@@ -1032,10 +1040,11 @@ lm.cwm.est <- data.frame(site, response, lower, upper)
 ```
 
 
-```{r}
+```{r, message = FALSE, echo = FALSE, warning = FALSE}
+
 
 All_CWM$Plot <- factor(All_CWM$Plot, levels=c("PFCA 1", "PFCA 2", "PFCA 3", "TP"))
-str(All_CWM$Plot)
+#str(All_CWM$Plot)
 
 
 ggplot() +
@@ -1055,9 +1064,25 @@ ggplot() +
 ```
 
 
-#### Seed Rain density vs. Seed mass (mg) [log 10 scale]
+#### Seed rain density vs. seed mass (mg) [log 10 scale]
 
-```{r}
+
+Far more seeds are dispersing in the seed rain of newly restored tallgrass prairies compared to older restorations and remnant communities.  But is this because there are more small-seeded species present in younger communities compared to older prairie communities? It is well known that species that produce small-seeds often produce greater quantities of seed rain than large-seeded species (MANY CITATIONS). Large species that take longer to reach reproductive maturity (like many prairie perennials) also tend to produce large seeds while species that reproduce quickly make small seeds (Moles et al. 2004). 
+
+
+##### 1) Is there a relationship between the seed rain and seed mass?
+
+There is a significant negative relationship between seed rain density and seed mass, where we capture small-seeded species more frequently than species that produce large, heavy seeds. 
+
+##### 2) Does this relationship change along a chronosequence of restored prairies?
+##### 3) Is this relationship different for restored vs. remnant prairies?
+
+As expected from analysis #1, younger restorations have denser seed rain than older restored and remnant prairies. 
+
+However, there was no significant interaction between site and seed mass, suggesting that all our communities had a similar relationship between seed rain and seed mass. 
+
+```{r, message = FALSE, echo = FALSE, warning = FALSE}
+
 All_Captured_Sum <- All_Captured %>% 
   group_by(Plot, SPP6, Mean_1_Seed_Mass_g) %>% 
   summarize(totseeds = sum(totseeds))
@@ -1067,49 +1092,9 @@ All_Captured_Sum$Mean_1_Seed_Mass_mg <- All_Captured_Sum$Mean_1_Seed_Mass_g * 10
 All_Captured_Sum$Seed_Rain_Density <- All_Captured_Sum$totseeds / 0.5
 ```
 
-```{r}
-All_Captured_Sum_Lumped <- All_Captured_Sum %>% 
-  group_by(SPP6, Mean_1_Seed_Mass_g) %>% 
-  summarize(totseeds = sum(totseeds))
 
+```{r, message = FALSE, echo = FALSE, warning = FALSE}
 
-All_Captured_Sum_Lumped$Density <- All_Captured_Sum_Lumped$totseeds * .5
-```
-
-```{r}
-options(scipen = 999)
-# Seed rain density vs. seed mass (mg)
-## Density = sum of all seeds captured for a species divided by total trapping area (2 m^2) 
-ggplot(All_Captured_Sum_Lumped, aes(x = Mean_1_Seed_Mass_g*1000, y = Density)) +
-  geom_point()+
-  scale_x_continuous(trans='log10') +
-  labs(x = "Seed mass (mg) [log 10 scale]", y = "Seed rain density")+
-  geom_smooth(method = "glm", method.args = list(family = Gamma(link = "log")))+
-  theme_classic()
-
-
-#mod.normal <- glm(log(Density) ~ log(Mean_1_Seed_Mass_mg), family = gaussian, data = All_Captured_Sum_Lumped)
-
-#mod.gamma.inv <- glm(Density~ log(Mean_1_Seed_Mass_mg), family = Gamma(link = inverse),  data = All_Captured_Sum_Lumped)
-
-
-mod.gamma.log <- glm(Density~ log10(Mean_1_Seed_Mass_g*1000), family = Gamma(link = log),  data = All_Captured_Sum_Lumped)
-
-summary(mod.gamma.log)
-
-
-### Gamma mod with log link is best
-
-#summary(mod.normal)$deviance
-#summary(mod.gamma.inv)$deviance
-summary(mod.gamma.log)$deviance
-
-
-```
-
-
-
-```{r}
 # Seed rain density vs. seed mass (mg)
 ## Density = sum of all seeds captured for a species at each site divided by total trapping area at a site (0.5 m^2) 
 ggplot(All_Captured_Sum, aes(x = Mean_1_Seed_Mass_mg, y = Seed_Rain_Density, color = Plot)) +
@@ -1140,41 +1125,85 @@ summary(mod.nb, dispersion = 1)
 #summary(mod.nb)$deviance
 
 
-### Ok so:
 
-#### More seeds in the youngest restoration 
-#### Negative relationship between seed rain density and seed mass 
-#### NO differences in the seed rain density and seed mass relationship between sites.
+```
+
+
+Because all sites had a similar relationship between seed rain density and seed mass, I combined all the data and reran the analysis. As before, there is a significant negative relationship between seed rain quantity and seed mass (i.e., small-seeded species were captured more frequently on average than large-seed species). 
+
+
+Overall, we found that species with smaller seeds produced significantly more seeds than large-seeded species (seeds per m2), suggesting a tradeoff between seed production/dispersal and seed size. Seed size is suggested as having a higher survival rate than small-seeded species to offset the numerical advantage afford to small-seeded species (Moles & Westoby, 2006).
+
+
+```{r, message = FALSE, echo = FALSE, warning = FALSE}
+
+All_Captured_Sum_Lumped <- All_Captured_Sum %>% 
+  group_by(SPP6, Mean_1_Seed_Mass_g) %>% 
+  summarize(totseeds = sum(totseeds))
+
+
+All_Captured_Sum_Lumped$Density <- All_Captured_Sum_Lumped$totseeds * .5
+```
+
+```{r, message = FALSE, echo = FALSE, warning = FALSE}
+
+options(scipen = 999)
+# Seed rain density vs. seed mass (mg)
+## Density = sum of all seeds captured for a species divided by total trapping area (2 m^2) 
+ggplot(All_Captured_Sum_Lumped, aes(x = Mean_1_Seed_Mass_g*1000, y = Density)) +
+  geom_point()+
+  scale_x_continuous(trans='log10') +
+  labs(x = "Seed mass (mg) [log 10 scale]", y = "Seeds"~m^-2)+
+  geom_smooth(method = "glm", method.args = list(family = Gamma(link = "log")))+
+  theme_classic() +
+  theme(text=element_text(size=16), legend.key.size=unit(0.25, "cm"))
+
+
+#mod.normal <- glm(log(Density) ~ log(Mean_1_Seed_Mass_mg), family = gaussian, data = All_Captured_Sum_Lumped)
+
+#mod.gamma.inv <- glm(Density~ log(Mean_1_Seed_Mass_mg), family = Gamma(link = inverse),  data = All_Captured_Sum_Lumped)
+
+
+mod.gamma.log <- glm(Density~ log10(Mean_1_Seed_Mass_g*1000), family = Gamma(link = log),  data = All_Captured_Sum_Lumped)
+
+summary(mod.gamma.log)
+
+
+### Gamma mod with log link is best
+
+#summary(mod.normal)$deviance
+#summary(mod.gamma.inv)$deviance
+#summary(mod.gamma.log)$deviance
 
 
 ```
+
+
 
 
 
 #### Seed Rain Biomass vs. Site
 
 
-```{r}
+
+
+When considering the total reproductive biomass of the seed rain at each site, the youngest restored community also had the greatest amount of dispersed biomass. Investment in seed rain biomass may be better more advantageous in early assembling communities. 
+
+
+```{r, message = FALSE, echo = FALSE, warning = FALSE}
+
+# Calculate seed biomass by multiplying seed mass by number of seeds captured for each species
 All_Captured$Seed_Biomass_g <- All_Captured$Mean_1_Seed_Mass_g * All_Captured$totseeds
 
-
+# Add all the seed biomass together for each site transect pair
 All_Captured_Biomass <- All_Captured %>% 
   group_by(Plot, Transect) %>% 
   summarize(Seed_Biomass_g = sum(Seed_Biomass_g))
 
-
-# Right skewed 
-
-ggplot(All_Captured_Biomass, aes(x=Seed_Biomass_g)) + 
-  geom_histogram(color="black", fill="white")
-
 ```
 
 
-
-
-```{r}
-
+```{r, message = FALSE, echo = FALSE, warning = FALSE}
 
 
 # Make Tucker Prairie (the remnant prairie) the reference level
@@ -1184,20 +1213,16 @@ str(All_Captured$Plot)
 
 # Fit a gamma distribution model predicting the amount of seed biomass per sit
 
-# Fit a gamma model predicting number of seeds by site
+# Fit a gamma model predicting seed biomass by site
 mod.gamma.biomass <- glm(Seed_Biomass_g~Plot, family = Gamma(link = "log"), data=All_Captured_Biomass)
 
 
-
 # Summary results of model
-### Dispersion = 1 since k was already estimated (see John Snyder's notes)
 summary(mod.gamma.biomass)
-
 
 
 ```
 
-Posthoc comparisons between the remnant and reconstructed prairies.
 
 ```{r, message = FALSE, echo = FALSE, warning = FALSE}
 
@@ -1207,7 +1232,6 @@ Posthoc comparisons between the remnant and reconstructed prairies.
 # Contrasts
 standardize.biomass <- emmeans(mod.gamma.biomass, "Plot")
 contrast(standardize.biomass, "trt.vs.ctrl")
-
 
 
 ## 95% confidence intervals 
@@ -1225,12 +1249,12 @@ gamma.biomass.est <- data.frame(site, response, lower, upper)
 
 ```
 
+```{r, message = FALSE, echo = FALSE, warning = FALSE}
 
-```{r}
 
 # Make PFCA 1 (the youngest prairie) the reference level
 All_Captured_Biomass$Plot <- factor(All_Captured_Biomass$Plot, levels=c("PFCA 1", "PFCA 2", "PFCA 3", "TP"))
-str(All_Captured$Plot)
+#str(All_Captured$Plot)
 
 
 ggplot() +
@@ -1244,7 +1268,7 @@ ggplot() +
   scale_x_discrete(labels = c ("PFCA 1" = "Young", "PFCA 2" = "Middle", "PFCA 3" = "Old", "TP" = "Remnant"), guide = guide_axis(angle = 0)) +
   scale_color_manual(name = "Site", values=c( "#1f78b4", "#a6cee3", "#b2df8a","#33a02c"), breaks=c("PFCA 1", "PFCA 2", "PFCA 3", "TP"), labels = c("Young", "Middle", "Old", "Remnant"))+
    scale_x_discrete(labels = c ("PFCA 1" = "Young", "PFCA 2" = "Middle", "PFCA 3" = "Old", "TP" = "Remnant"), guide = guide_axis(angle = 0)) +
- theme(text=element_text(size=16), legend.key.size=unit(1, "cm"))+ geom_vline(xintercept = 3.5, linetype = "longdash")
+ theme(text=element_text(size=16), legend.key.size=unit(1, "cm"))+ geom_vline(xintercept = 3.5, linetype = "longdash") + annotate("text", x = 1 , y = 7.5, label = "*", size = 9.5)
 ```
 
 
