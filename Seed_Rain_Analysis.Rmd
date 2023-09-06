@@ -1037,9 +1037,9 @@ anova(lm.CWM)
 
 emmeans::emmeans(lm.CWM , "Plot", type = "response")
 
-response <- c(0.677, 0.850, 0.631, 0.886)
-lower <- c(0.407, 0.580, 0.361,  0.616)
-upper <- c(0.948, 1.120, 0.901, 1.156)
+response <- c(0.685, 0.850, 0.631, 0.904)
+lower <- c(0.411, 0.577, 0.358,  0.631)
+upper <- c(0.958, 1.123, 0.904, 1.177)
 site <- c("TP", "PFCA 1", "PFCA 2", "PFCA 3")
 
 
@@ -1178,6 +1178,20 @@ All_Captured_Biomass <- All_Captured %>%
 
 ```
 
+```{r}
+# Total seed biomass for a site
+
+Lumped_Biomass <- All_Captured %>% 
+  group_by(Plot) %>% 
+  summarize(Seed_Biomass_mg = sum(Seed_Biomass_mg))
+
+Lumped_Biomass$Seed_Biomass_g <- Lumped_Biomass$Seed_Biomass_mg / 1000
+
+Lumped_Biomass$Biomass_Density <- Lumped_Biomass$Seed_Biomass_g / 0.5
+
+Lumped_Biomass
+```
+
 
 ```{r, message = FALSE, echo = FALSE, warning = FALSE}
 
@@ -1216,9 +1230,9 @@ emmeans::emmeans(mod.gamma.biomass, "Plot", type = "response")
 
 ## Make a new dataframe to hold the model estimates and 95% confidence interval bounds
 
-response <- c(1112, 4371, 1378, 882)
-lower <- c(844, 3320, 1046,  670)
-upper <- c(1464, 5756, 1814, 1161)
+response <- c(1133, 4373, 1378, 914)
+lower <- c(851, 3283, 1034,  686)
+upper <- c(1510, 5825, 1835, 1217)
 site <- c("TP", "PFCA 1", "PFCA 2", "PFCA 3")
 
 gamma.biomass.est <- data.frame(site, response, lower, upper)
