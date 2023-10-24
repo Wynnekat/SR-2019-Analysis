@@ -113,54 +113,13 @@ library(mosaic)
 
 # Data sets
 
-Seed_Cleaning <- read_excel("Seed_Rain_Data_2019_FINAL.xlsx")
+Seed_Data_Lumped <- read_excel("Seed_Data_2019.xlsx")
 Seed_Rain_Date <- read_excel("Seed_Rain_Date.xlsx")
 Species_data <- read_excel("Seed_Rain_Traits_Dataset.xlsx")
 ```
 
-```{r, results = 'hide',echo=FALSE,  message = FALSE, warning = FALSE}
-
-## Data Cleaning
-### General Data Cleaning 
-
-
-# Checking to make sure all the SPP6 levels are correct (no misspellings or weirdness)
-
-sort(unique(Seed_Cleaning$SPP6))
-```
 
 ```{r, results = 'hide', echo=FALSE, message = FALSE, warning = FALSE}
-
-## Code to remove non-viable seeds from the dataset
-Seed_Data <- filter(Seed_Cleaning, !grepl('NONE',SPP6)) 
-```
-
-```{r, results = 'hide',echo=FALSE, message = FALSE, warning = FALSE}
-
-# Code to lump certain species together
-Seed_Data_Lumped <- Seed_Data
-for(i in 1:nrow(Seed_Data)){
-  
-  if(Seed_Data_Lumped[i,5] == "AGAFAS"){Seed_Data_Lumped[i,5] <- "AGASPP"}
-  if(Seed_Data_Lumped[i,5] == "EUPSER"){Seed_Data_Lumped[i,5] <- "EUPSPP"}
-  if(Seed_Data_Lumped[i,5] == "GENPUB"){Seed_Data_Lumped[i,5] <- "GENSPP"}
-}  
-
-### Species remaining after lumping and removing unknowns
-list(sort(unique(Seed_Data_Lumped$SPP6)))
-```
-
-```{r, results = 'hide', echo=FALSE, message = FALSE, warning = FALSE}
-
-# Make sure variables are in the correct format
-Seed_Data_Lumped$Plot <- as.factor(Seed_Data_Lumped$Plot)
-Seed_Data_Lumped$Number <- as.numeric(Seed_Data_Lumped$Number)
-Seed_Data_Lumped$Week <- as.factor(Seed_Data_Lumped$Week)
-Seed_Data_Lumped$Transect <- as.factor(Seed_Data_Lumped$Transect)
-Seed_Data_Lumped$SPP6 <- as.factor(Seed_Data_Lumped$SPP6)
-
-
-# Remove columns unnecessary for analysis (Sampling Date, Notes, Taxon, Revisit)
 
 
 # Data set with sampling date (analysis 2 and 4)
@@ -172,6 +131,9 @@ Seed_Data_Lumped <- Seed_Data_Lumped[, -c(3,7,8,9)]
   
 ```
 
+```{r}
+#write_xlsx(Seed_Data_Lumped, "Seed_Data_Lumped.xlsx")
+```
 
 ## Analysis 1: Are there differences in the quantity of seed rain between sites?
 
