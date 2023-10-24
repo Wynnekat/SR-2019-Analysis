@@ -36,6 +36,8 @@ fontsize: 12pt
 
 2)  *Seed_Rain_Date.xlsx* - contains lumped seed data per week for each site
 
+2)  *Seed_Rain_Traits_Data.xlsx* - species list and trait data
+
 ------------------------------------------------------------------------
 
 **R Version:** R 4.2.2
@@ -44,7 +46,7 @@ fontsize: 12pt
 
 **Package Version:** Found in the .readme document in GitHub Repository
 
-**Last updated: 10 April 2023**
+**Last updated: 24 October 2023**
 
 ------------------------------------------------------------------------
 
@@ -113,7 +115,7 @@ library(mosaic)
 
 Seed_Cleaning <- read_excel("Seed_Rain_Data_2019_FINAL.xlsx")
 Seed_Rain_Date <- read_excel("Seed_Rain_Date.xlsx")
-Species_data <- read_excel("SR_SB_VEG_Traits_Dataset.xlsx")
+Species_data <- read_excel("Seed_Rain_Traits_Dataset.xlsx")
 ```
 
 ```{r, results = 'hide',echo=FALSE,  message = FALSE, warning = FALSE}
@@ -171,31 +173,10 @@ Seed_Data_Lumped <- Seed_Data_Lumped[, -c(3,7,8,9)]
 ```
 
 
-
-```{r}
-
-# Get rid of unknown species to make a species list for analysis 4
-Species_list_SR <- filter(Seed_Data_Lumped, !grepl('UNK',SPP6)) 
-Species_list_SR <- filter(Species_list_SR , !grepl('unk',SPP6)) 
-Species_list_SR <- filter(Species_list_SR , !grepl('	
-PANICUM?',SPP6)) 
-
-
-# Make a species list dataset
-Species_list_SR <- Species_list_SR %>% 
-  group_by(SPP6) %>% 
-  summarize(totseeds = sum(Number)) 
-Species_list_SR <- Species_list_SR[,-2]
-
-
-#write_xlsx(Species_list_SR, "Species_list_SR.xlsx")
-```
-
 ## Analysis 1: Are there differences in the quantity of seed rain between sites?
 
 ### **Are there differences in the quantity of seed rain between sites?**
 
-To test for differences between the number of seeds falling in remnant and restored prairies, we fit a generalized linear model predicting number of seeds captured as a function of site (n = 4). We used a negative binomial distribution ("MASS" package; Venables & Ripley, 2002) to account for overdispersion present in the data. We then conducted a posthoc analysis using Dunnett-style contrasts ("emmeans" package; Lenth, 2023) with a multiple comparison adjustment for three tests to determine whether restored sites significantly differed in the number of seeds falling compared to the remnant prairie.
 
 ```{r, results = 'hide', echo = FALSE, message = FALSE, warning = FALSE}
 
@@ -249,6 +230,7 @@ NegBinom_seeds_glm <- MASS::glm.convert(neg_binom_seeds_mod)
 ### Dispersion = 1 since k was already estimated (see John Snyder's notes)
 summary(NegBinom_seeds_glm, dispersion = 1)
 ```
+
 
 Posthoc comparisons between the remnant and reconstructed prairies.
 
@@ -313,17 +295,11 @@ abund.jitter.plot.ano <- abund.jitter.plot + annotate("text", x = 1 , y = 9500, 
 abund.jitter.plot.ano 
 ```
 
-**Figure 1**: The number of seeds captured per transect in the remnant prairie (dark green), young (2-year-old, dark blue), middle-aged (6-7-year-old, light blue), and old (15-year-old, light green) reconstructed prairies between May 31st and December 12th, 2019. Error bars represent 95% confidence intervals around model estimates (black). Asterisk symbols indicate sites that had significantly different amounts of seeds captured when compared to the remnant prairie (p \< 0.05).
 
-### Analysis 1: Results
-
-The quantity of seed rain in reconstructions decreased with age. By at least 6-7 years post-initial seeding, the number of seeds dispersing in reconstructions was comparable to the remnant prairie in 2019. Only the youngest reconstructed prairie had significantly more seeds dispersing than the remnant prairie sampled in the same year.
 
 ## Analysis 2: Are there differences in the timing of seed rain between sites?
 
 ### **Are there differences in the timing of seed rain between sites?**
-
-Similar to Rabinowitz and Rapp (1980), we graphed seed rain phenology to compare seed rain timing between restoration ages, site types, and study years
 
 ```{r, results = 'hide', echo = FALSE, message = FALSE, warning = FALSE}
 
@@ -390,19 +366,10 @@ ggplot(New_Seed_Rain_Date, aes(y=Density_J, x=Date, group=Plot)) +
   ylim(0, 32000)
 ```
 
-**Figure 2.** Timing of seed rain in reconstructed prairies of various ages and a remnant prairie. Data for the remnant in 1978 obtained from Rabinowitz and Rapp (1980).
-
-### Analysis 2: Results:
-
-Seed rain in all prairies exhibited a bimodal pattern of dispersal, where seed rain density peaked once in the early summer and again in the fall. However, compared to 1978, the timing of peak seed rain density was shifted two weeks earlier in 2019. Timing of the seed rain converged with the remnant prairie (2019) as the prairie reconstructions matured. As expected, the youngest (2-year-old) reconstructed prairie was the most divergent, where the timing of the first peak in seed rain was delayed by a month compared to the other prairies sampled in 2019. Overall, the timing of the seed rain captured in the middle-aged (6-7-year-old) and old (15-year-old) reconstructed prairie closely resembled the timing of the remnant prairie in 2019.
-
 ## Analysis 3: Are there differences in the composition of seed rain between sites?
 
 ### **Are there differences in the composition of seed rain between sites?**
 
-To assess for seed rain compositional differences between sites, we first created a community distance matrix using Bray-Curtis dissimilarity, which considers changes in species abundance between sites. Before calculating Bray-Curtis dissimilarity, we relativized species abundance by site total (across plot rows). We then visualized compositional differences with non-metric multidimensional scaling (NMDS) ordination. As Clarke (1993) recommended, we did not use solutions with stress \> 0.20. We used the envfit function (permutations = 5000) found in the "vegan" package (Oksanen et al., 2020) to identify species significantly associated with driving the observed compositional differences among sites and plot them as vectors (p \< 0.001).
-
-Using permutational multivariate analysis of variance (PERMANOVA, permutations = 999) and posthoc pairwise comparison tests ("pairwiseAdonis" package; Martinez Arbizu, 2020), we examined potential differences in species composition between remnant and restored prairies. Additionally, we tested for homogeneity of multivariate dispersions to assess whether there were differences in variation among communities between study sites. We first calculated multivariate dispersion for each site using the *betadisper* function, and then conducted an ANOVA to detect differences between sites. We used the "vegan" package (Oksanen et al., 2020) to conduct all multivariate analyses.
 
 *Note that using Jaccard dissimilarity and presence/absence produced similar results to Bray-Curtis (Not shown).*
 
@@ -547,8 +514,6 @@ NMDS_plot <- ggplot(scrs) +
 NMDS_plot
 ```
 
-**Figure 3.** Non-metric multidimensional scaling analysis (NMDS) ordination using Bray-Curtis dissimilarity visualizing seed rain species composition at a remnant prairie and prairie reconstructions of various ages (k = 2, stress = 0.174). Ellipses represent 95% confidence intervals calculated from standard error. Plot vectors represent species significantly associated with seed rain composition (p ≤ 0.001).
-
 ### Analysis 3: PERMANOVA
 
 ```{r, message = FALSE, echo = FALSE, warning = FALSE}
@@ -586,15 +551,9 @@ bd <- betadisper(data.dist.tot, as.factor(seed_com$site))
 anova(bd)
 ```
 
-### Analysis 3: Results
-
-Species composition of the seed rain significantly differed between all sites (*PERMANOVA,* R^2^ = 0.41, F~3~ = 8.19, p \< 0.001; *all pairwise comparisons,* p \< 0.01). However, variation in community composition did not differ among the sampled prairies (*ANOVA,* R^2^ = 0.04,F~3~ = 0.54, p = 0.66). Reconstructed prairies of comparable ages shared the most similarities in regards to species composition. Except for some marginal overlap with the oldest reconstruction, the remnant prairie contained a distinct community of dispersing plants compared to reconstructed sites. In general, NMDS1 appeared to correspond to plant life history traits, where influential annual/biannual species in the seed rain align on the left side of the axis and perennial species on the right side. NMDS2 may be associated with plant functional group, where influential forbs cluster at higher values and graminoids at lower values along the axis.
-
 ## Analysis 4: Are there differences in the diversity of seed rain between sites?
 
 ### **Are there differences in the diversity of seed rain between sites?**
-
-\-\--
 
 
 ```{r, results = 'hide', echo = FALSE, message = FALSE, warning = FALSE}
@@ -811,14 +770,12 @@ contrast(standardize, "trt.vs.ctrl")
 ```
 
 
-
-
 ### Analysis 4: Data visualization
 
-#### Species Richness
+
 
 ```{r, message = FALSE, echo = FALSE, warning = FALSE}
-
+#### Species Richness
 
 Uni_Seed_Diversity$Plot <- factor(Uni_Seed_Diversity$Plot, levels=c("PFCA 1", "PFCA 2", "PFCA 3", "TP"))
 
@@ -843,9 +800,31 @@ SR.plot.annotated <- SR.plot +  annotate("text", x = c(1,2) , y = 55, label = "*
 
 ```
 
+```{r, message = FALSE, echo = FALSE, warning = FALSE}
+
+
+
+Tot_SR_fig <- ggplot(week_species_counts, aes(y=Species_richness, x=`Sampling Date`, group=Plot)) +
+  geom_line(aes(colour=Plot), size = 1.5,  show.legend = FALSE) +
+  geom_point(aes(shape=Plot, fill=Plot), size=3,  show.legend = FALSE)+
+  scale_color_manual(name = "", values=c("#1f78b4", "#a6cee3", "#b2df8a", "#33a02c"), breaks=c("PFCA 1", "PFCA 2", "PFCA 3", "TP"), labels = c("Young", "Middle", "Old", "Remnant 2019"))+
+    scale_fill_manual(name = "", values=c("#1f78b4", "#a6cee3", "#b2df8a", "#33a02c"), breaks=c("PFCA 1", "PFCA 2", "PFCA 3", "TP"), labels = c("Young", "Middle", "Old", "Remnant 2019"))+
+  scale_shape_manual(name = "", values=c(23,24,22,21),breaks=c("PFCA 1", "PFCA 2", "PFCA 3", "TP"), labels = c("Young", "Middle", "Old", "Remnant 2019")) +
+  theme_classic()+
+  ylim(0,60)+
+  scale_x_datetime(date_breaks = '1 month', date_labels="%b %d", limits=as.POSIXct(c("2019-06-10", "2020-01-01")))+
+  theme(text=element_text(size=18), legend.key.size=unit(1, "cm"))+
+  ylab("Total richness")+
+  xlab("")+
+  guides(x = guide_axis(angle = 45))
+
+```
+
+
 
 
 ```{r, message = FALSE, echo = FALSE, warning = FALSE}
+#### Native Species Richness
 
 Native_Uni_Seed_Diversity$Plot <- factor(Native_Uni_Seed_Diversity$Plot, levels=c("PFCA 1", "PFCA 2", "PFCA 3", "TP"))
 
@@ -869,29 +848,6 @@ Native.SR.plot.annotated <- Native.SR.plot.annotated + geom_vline(xintercept = 3
 
 
 ```
-
-
-
-```{r, message = FALSE, echo = FALSE, warning = FALSE}
-
-
-# setwd("~/Desktop/Seed Rain 2019/Graphics")
-Tot_SR_fig <- ggplot(week_species_counts, aes(y=Species_richness, x=`Sampling Date`, group=Plot)) +
-  geom_line(aes(colour=Plot), size = 1.5,  show.legend = FALSE) +
-  geom_point(aes(shape=Plot, fill=Plot), size=3,  show.legend = FALSE)+
-  scale_color_manual(name = "", values=c("#1f78b4", "#a6cee3", "#b2df8a", "#33a02c"), breaks=c("PFCA 1", "PFCA 2", "PFCA 3", "TP"), labels = c("Young", "Middle", "Old", "Remnant 2019"))+
-    scale_fill_manual(name = "", values=c("#1f78b4", "#a6cee3", "#b2df8a", "#33a02c"), breaks=c("PFCA 1", "PFCA 2", "PFCA 3", "TP"), labels = c("Young", "Middle", "Old", "Remnant 2019"))+
-  scale_shape_manual(name = "", values=c(23,24,22,21),breaks=c("PFCA 1", "PFCA 2", "PFCA 3", "TP"), labels = c("Young", "Middle", "Old", "Remnant 2019")) +
-  theme_classic()+
-  ylim(0,60)+
-  scale_x_datetime(date_breaks = '1 month', date_labels="%b %d", limits=as.POSIXct(c("2019-06-10", "2020-01-01")))+
-  theme(text=element_text(size=18), legend.key.size=unit(1, "cm"))+
-  ylab("Total richness")+
-  xlab("")+
-  guides(x = guide_axis(angle = 45))
-
-```
-
 
 
 ```{r, message = FALSE, echo = FALSE, warning = FALSE}
@@ -930,62 +886,24 @@ plot_grid(panel_1 , legend, rel_widths = c(3,.5), rel_heights = c(1,2), label_si
 ```
 
 
-**Results :** Mean total morphospecies richness was only significantly greater in the youngest and middle-aged prairie compared to the remnant. While only mean native morphospecies richness was greater in the middle-aged prairie. Overall, morphospecies richness trended upward during the study period, with more morphospecies captured in the late fall than in the summer.
-
 ## Analysis 5: Do differences in the quantity of seed rain reflect changes in seed mass traits as community assembly proceeds?
-
-
 
 
 #### Analysis 5: Community Weighted Mean (CWM) seed mass analysis 
 
-There was no significant change in CWM seed mass between sites, suggesting that differences in the quantity of seed rain is not related to changes in seed mass traits as community assembly proceeds and restored prairie communities mature. Therefore, the marked increase in seed rain abundance in younger communities is not because there are more small-seeded species dispersing in that community.  
 
 
 ```{r, message = FALSE, echo = FALSE, warning = FALSE}
 
-## Old code
-### I'm keeping this code just in case I need it. I want to use the full data though since there are only 4 morphospecies I'm missing seed mass data for: Oenothera filliformis, Rubus spp., Eleocharis spp and Eleocharis spp1. I plan on weighing OENFIL and RUBSPP since we have enough seeds (> 20) in the reference collection and captured seed rain. I will only omit the two Eleocharis spp. morphospecies since there is 1) a paucity of published data for the Eleocharis species in the area and 2) we only caught one seed for each morphospecies. 
-
-
-### ----
-
-# Only with most frequently captured species
-
-#Most_Frequently_Captured <- Seed_Data_Lumped %>% 
-  #group_by(SPP6) %>% 
-  #summarize(totseeds = sum(totseeds)) %>% 
-  #filter(totseeds >= 50)
-
-#Most_Frequently_Captured <- Most_Frequently_Captured[,-2]
-
-
-#Most_Frequently_Captured_data <- left_join(Most_Frequently_Captured, 
-#Seed_Data_Lumped, multiple = "all")
-
-# Only use the most common species (> 50 seeds captured over the course of the study = top 60 most frequently caught species)
-
-
-#test <- Most_Frequently_Captured_data %>% 
-  #group_by(Plot, Transect) %>% 
-  #summarize(weighted_seed_mass = weighted.mean(Mean_1_Seed_Mass_g, totseeds))
-  
-
-
-```
-
-
-```{r, message = FALSE, echo = FALSE, warning = FALSE}
-
-# Filter out the morphospecies we do not have seed mass data for
+# Filter out the 2 morphospecies we do not have seed mass data for
 
 All_Captured <- Seed_Data_Lumped %>% 
   filter(Mean_1_Seed_Mass_g >= 0)
 
 
 # Get CWM seed mass data for all species captured at each transect for each site.
-### CWM seed mass = relative abundance and mass
-## Multiply by 1000 to convert from g to mg 
+# CWM seed mass = relative abundance and mass
+# Multiply by 1000 to convert from g to mg 
 
 All_CWM <-All_Captured  %>% 
   group_by(Plot, Transect) %>% 
@@ -995,7 +913,6 @@ All_CWM <-All_Captured  %>%
 ```
 
 ```{r, message = FALSE, echo = FALSE, warning = FALSE}
-
 
 
 # Make Tucker Prairie (the remnant prairie) the reference level
@@ -1072,97 +989,7 @@ CWM.plot
 ```
 
 
-#### Analysis 5: Seed rain density vs. seed mass (mg) [log 10 scale]
-
-
-Far more seeds are dispersing in the seed rain of newly restored tallgrass prairies compared to older restorations and remnant communities.  But is this because there are more small-seeded species present in younger communities compared to older prairie communities? It is well known that species that produce small-seeds often produce greater quantities of seed rain than large-seeded species (MANY CITATIONS). Large species that take longer to reach reproductive maturity (like many prairie perennials) also tend to produce large seeds while species that reproduce quickly make small seeds (Moles et al. 2004). 
-
-
-*1) Is there a relationship between the seed rain and seed mass?*
-
-There is a significant negative relationship between seed rain density and seed mass, where we capture small-seeded species more frequently than species that produce large, heavy seeds. 
-
-*2) Does this relationship change along a chronosequence of restored prairies?*
-
-*3) Is this relationship different for restored vs. remnant prairies?*
-
-As expected from analysis #1, younger restorations have denser seed rain than older restored and remnant prairies. 
-
-However, there was no significant interaction between site and seed mass, suggesting that all our communities had a similar relationship between seed rain and seed mass. 
-
-```{r, message = FALSE, echo = FALSE, warning = FALSE}
-
-All_Captured_Sum <- All_Captured %>% 
-  group_by(Plot, SPP6, Mean_1_Seed_Mass_g) %>% 
-  summarize(totseeds = sum(totseeds))
-
-All_Captured_Sum$Mean_1_Seed_Mass_mg <- All_Captured_Sum$Mean_1_Seed_Mass_g * 1000
-
-All_Captured_Sum$Seed_Rain_Density <- All_Captured_Sum$totseeds / 0.5
-```
-
-
-```{r, message = FALSE, echo = FALSE, warning = FALSE}
-
-# Seed rain density vs. seed mass (mg)
-## Density = sum of all seeds captured for a species at each site divided by total trapping area at a site (0.5 m^2) 
-seedmass.quantity.plot <- ggplot(All_Captured_Sum, aes(x = Mean_1_Seed_Mass_mg, y = totseeds)) +
-  geom_point()+
-  scale_x_continuous(trans='log10') +
-  geom_smooth(method = "glm.nb") +
-   labs(x = "Seed mass (mg) [log 10 scale]", y = "Number of seeds")+
-  theme_classic() +
-  theme(text=element_text(size=18), legend.key.size=unit(0.25, "cm"))
-  
-seedmass.quantity.plot
-
-
-```
-
-```{r}
-
-#mod.gaussian <- glm(log(Seed_Rain_Density) ~ log(Mean_1_Seed_Mass_mg)*Plot, family = gaussian, data=All_Captured_Sum)
-
-# Fit a negative binomial model predicting number of seeds by site
-mod.nb <- MASS::glm.nb(totseeds ~log10(Mean_1_Seed_Mass_mg)+log10(Mean_1_Seed_Mass_mg):Plot, data=All_Captured_Sum)
-
-# Convert back to glm() style object  (look into this again you may not need to do it)
-mod.nb <- MASS::glm.convert(mod.nb)
-
-# Summary results of model
-### Dispersion = 1 since k was already estimated (see John Snyder's notes)
-summary(mod.nb, dispersion = 1)
-
-
-### Negative binomial model is FAR better
-
-#summary(mod.gaussian)$deviance
-#summary(mod.nb)$deviance
-
-# Contrasts
-
-
-anova(mod.nb, test = "Chisq")
-
-## 95% confidence intervals 
-
-
-
-
-```
-
-
-Because all sites had a similar relationship between seed rain density and seed mass, I combined all the data and reran the analysis. As before, there is a significant negative relationship between seed rain quantity and seed mass (i.e., small-seeded species were captured more frequently on average than large-seed species). 
-
-
-Overall, we found that species with smaller seeds produced significantly more seeds than large-seeded species (seeds per m2), suggesting a tradeoff between seed production/dispersal and seed size. Seed size is suggested as having a higher survival rate than small-seeded species to offset the numerical advantage afford to small-seeded species (Moles & Westoby, 2006).
-
-
-
 #### Analysis 5: Seed Rain Biomass vs. Site
-
-
-When considering the total reproductive biomass of the seed rain at each site, the youngest restored community also had the greatest amount of dispersed biomass. Investment in seed rain biomass may be better more advantageous in early assembling communities. 
 
 
 ```{r, message = FALSE, echo = FALSE, warning = FALSE}
@@ -1265,7 +1092,12 @@ seed.biomass.plot
 
 
 
-## Analysis 6: Supplemental table to assist in cross study comparison
+## Supplemental Materials
+
+
+### Summary tables
+
+Below is the code to make the large summary tables of all seeds and species captured at each time point for each site. 
 
 ```{r, message = FALSE, echo = FALSE, warning = FALSE}
 #Species name labels
@@ -1274,6 +1106,10 @@ Species_name <- Species_data[,c(1,2)]
 ```
 
 ```{r, message = FALSE, echo = FALSE, warning = FALSE}
+
+## code below is to lump all unknown morphospecies into one category (UNKSPP)
+
+# temporarily removed unknown species
 
 Lumped_unknown1 <- Seed_Data_Date  %>% 
   filter(grepl('UNK',SPP6)) %>% 
@@ -1285,10 +1121,13 @@ Lumped_unknown2 <- Seed_Data_Date %>%
   group_by(Plot, `Sampling Date`) %>% 
                         summarize(totseeds = sum(Number))
 
+# Make a dataset of unknown species 
 
 Lumped_unknown <- rbind(Lumped_unknown1, Lumped_unknown2)
 
 Lumped_unknown$SPP6 <- rep("UNKSPP", 25)
+
+# Make a dataset of identified species 
 
 Lumped_no_unknown <- Seed_Data_Date %>% 
    filter(!grepl('UNK',SPP6)) 
@@ -1297,6 +1136,9 @@ Lumped_no_unknown <- Lumped_no_unknown  %>%
    filter(!grepl('PANICUM?',SPP6)) %>%
     group_by(Plot, `Sampling Date`, SPP6) %>% 
                         summarize(totseeds = sum(Number))
+
+
+# combine datasets 
 
 full_SPP6_Date <- full_join(Lumped_unknown, Lumped_no_unknown)
 
@@ -1314,6 +1156,9 @@ full_SPP6_Date <- full_SPP6_Date %>%
 
 
 ```{r, message = FALSE, echo = FALSE, warning = FALSE}
+
+# Calculate what percentage of seeds we were able to identify 
+
 Lumped_full_SPP6 <- full_SPP6_Date %>%
                          group_by(Plot, SPP6) %>% 
                          summarize(totseeds = sum(totseeds))
@@ -1328,12 +1173,12 @@ Lumped_full_SPP6_u <- Lumped_full_SPP6 %>%
 
 Lumped_full_SPP6_nu$percent_known <- 100-(Lumped_full_SPP6_u$totseeds / Lumped_full_SPP6_nu$totseeds)*100
 
-Lumped_full_SPP6_nu
+Lumped_full_SPP6_nu$percent_known #totseeds in this dataset are for only identified seeds!
 ```
 
 
-
 ```{r, message = FALSE, echo = FALSE, warning = FALSE}
+
 
 # Per site
 seed_community_phenology_site <- spread(full_SPP6_Date, `Sampling Date`, totseeds, fill = 0)
@@ -1342,15 +1187,18 @@ seed_community_phenology_site <- spread(full_SPP6_Date, `Sampling Date`, totseed
 
 seed_community_phenology_lumped <- spread(full_SPP6_Date_TOT, `Sampling Date`, totseeds, fill = 0)
 
+# Arrange species so that ones captured early in the season appear at the top
 
 seed_community_phenology_lumped <- seed_community_phenology_lumped %>% 
   arrange(desc(`2019-06-13`), desc(`2019-06-27`), desc(`2019-07-10`), desc(`2019-07-11`), desc(`2019-07-26`), desc(`2019-08-08`),  desc(`2019-08-22`),  desc(`2019-09-05`), desc(`2019-09-19`), desc(`2019-10-03`), desc(`2019-10-17`), desc(`2019-11-02`), desc(`2019-11-14`), desc(`2019-12-01`), desc(`2019-12-12`))
 
 
+# Convert zeros to blanks (formatting for the table)
+
 seed_community_phenology_lumped [seed_community_phenology_lumped  == 0] <- NA
 ```
 
-Table SIII. Total number of seeds captured at all sites. Divide by 200 to get mean number of seeds per turf grass trap. Multiply by 0.5 to convert to seeds per m2 (total trapping area 2 m2).  
+**Table SIII.** Total number of seeds captured at all sites. Divide by 200 to get mean number of seeds per turf grass trap. Multiply by 0.5 to convert to seeds per m2 (total trapping area 2 m2).  
 
 ```{r, message = FALSE, echo = FALSE, warning = FALSE}
 # All sites
@@ -1366,7 +1214,7 @@ full_table
 
 ```
 
-Table SIV. Total number of seeds captured at all the remnant prairie (Tucker Prairie). Divide by 50 to get mean number of seeds per turf grass trap. Multiply by 2 to convert to seeds per m2 (total trapping area 0.5 m2).  
+**Table SIV.** Total number of seeds captured at all the remnant prairie (Tucker Prairie). Divide by 50 to get mean number of seeds per turf grass trap. Multiply by 2 to convert to seeds per m2 (total trapping area 0.5 m2).  
 
 ```{r, message = FALSE, echo = FALSE, warning = FALSE}
 # Tucker Prairie
@@ -1389,7 +1237,7 @@ TP_table  <- flextable( TP_names)
 TP_table
 ```
 
-Table SV. Total number of seeds captured at all the young restored prairie (2-year-old). Divide by 50 to get mean number of seeds per turf grass trap. Multiply by 2 to convert to seeds per m2 (total trapping area 0.5 m2). 
+**Table SV.** Total number of seeds captured at all the young restored prairie (2-year-old). Divide by 50 to get mean number of seeds per turf grass trap. Multiply by 2 to convert to seeds per m2 (total trapping area 0.5 m2). 
 
 ```{r, message = FALSE, echo = FALSE, warning = FALSE}
 # PFCA 1
@@ -1413,7 +1261,7 @@ PFCA1_table  <- flextable(PFCA1_names)
 PFCA1_table
 ```
 
-Table SVI.Total number of seeds captured at all the middle-aged restored prairie (6-7-year-old). Divide by 50 to get mean number of seeds per turf grass trap. Multiply by 2 to convert to seeds per m2 (total trapping area 0.5 m2). 
+**Table SVI.** Total number of seeds captured at all the middle-aged restored prairie (6-7-year-old). Divide by 50 to get mean number of seeds per turf grass trap. Multiply by 2 to convert to seeds per m2 (total trapping area 0.5 m2). 
 ```{r, message = FALSE, echo = FALSE, warning = FALSE}
 # PFCA 2
 seed_community_phenology_PFCA2 <- seed_community_phenology_site %>% 
@@ -1435,7 +1283,7 @@ PFCA2_table  <- flextable(PFCA2_names)
 PFCA2_table
 ```
 
-Table SVII. Total number of seeds captured at all the oldest restored prairie (15-year-old). Divide by 50 to get mean number of seeds per turf grass trap. Multiply by 2 to convert to seeds per m2 (total trapping area 0.5 m2).  
+**Table SVII.** Total number of seeds captured at all the oldest restored prairie (15-year-old). Divide by 50 to get mean number of seeds per turf grass trap. Multiply by 2 to convert to seeds per m2 (total trapping area 0.5 m2).  
 
 ```{r, message = FALSE, echo = FALSE, warning = FALSE}
 # PFCA 3
@@ -1459,6 +1307,7 @@ PFCA3_table
 ```
 
 ```{r, message = FALSE, echo = FALSE, warning = FALSE}
+# Code to convert flex tables into word document tables for the SI. 
 
 #read_docx() %>% 
   #body_add_flextable(value = full_table) %>%  
@@ -1467,8 +1316,6 @@ PFCA3_table
   #body_add_flextable(value = PFCA2_table) %>%  
   #body_add_flextable(value = PFCA3_table) %>% 
   #print(target = "example_table_word2.docx")
-
-
 
 
 ```
@@ -1531,3 +1378,55 @@ panel_3 <- plot_grid(abund.jitter.plot.ano, seed.biomass.plot, CWM.plot,
 ```{r, fig.width = 12, fig.height = 4}
 panel_3
 ```
+
+
+### Rank abundance curve
+
+```{r,message = FALSE, echo = FALSE, warning = FALSE, fig.width = 8, fig.height = 4, include = FALSE}
+
+seed_com$site <- as.factor(seed_com$site)
+
+RankAbun.1 <- rankabundance(seed_mat)
+
+RA.data <- rankabuncomp(seed_mat, y=seed_com, factor= 'site', 
+    return.data=TRUE, specnames=c(1), legend=FALSE, scale = "proportion")
+
+```
+
+```{r,message = FALSE, echo = FALSE, warning = FALSE, fig.width = 8, fig.height = 4}
+
+theme1 <- theme(
+        panel.background = element_blank(),
+        panel.border = element_blank(),
+        panel.grid = element_blank(),
+        axis.line = element_line("gray25"),
+        text = element_text(size = 12, family="Arial"),
+        axis.text = element_text(size = 10, colour = "gray25"),
+        axis.title = element_text(size = 14, colour = "gray25"),
+        legend.title = element_text(size = 14),
+        legend.text = element_text(size = 14),
+        legend.key = element_blank())
+
+rank.abundance.plot <- ggplot(data=RA.data , aes(x = rank, y = proportion)) + 
+    geom_line(aes(colour=Grouping), size=.75) +
+    geom_point(aes(fill=Grouping, shape=Grouping), size=2) +
+    theme1 +
+    labs(x = "Rank", y = "Proportion")+
+    scale_colour_manual(name = "Site", 
+                     values=c( "#1f78b4", "#a6cee3", "#b2df8a","#33a02c"),
+                     breaks=c("PFCA 1", "PFCA 2", "PFCA 3","TP"),
+                     labels = c("Young", "Middle", "Old", "Remnant 2019"))+
+    scale_shape_manual(name = "Site", 
+                     values=c(23,24,22,21),
+                     breaks=c("PFCA 1", "PFCA 2", "PFCA 3", "TP"),
+                     labels = c("Young", "Middle", "Old", "Remnant 2019")) +
+    scale_fill_manual(name = "Site", 
+                      values=c( "#1f78b4", "#a6cee3", "#b2df8a","#33a02c"),
+                      breaks=c("PFCA 1", "PFCA 2", "PFCA 3", "TP"), 
+                      labels = c("Young", "Middle", "Old", "Remnant 2019"))+
+  ylim(0,50)
+
+rank.abundance.plot
+```
+
+
