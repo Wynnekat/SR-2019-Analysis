@@ -24,7 +24,7 @@ fontsize: 12pt
 
 **Author:** Katherine Wynne ([Wynnekat\@msu.edu](mailto:Wynnekat@msu.edu){.email})
 
-**Co-authors:** M. Parker-Smith, E. Eyerly, L. Sullivan
+**Co-authors:** M. J. Parker-Smith, E. M. Eyerly, L. L. Sullivan
 
 **Created:** 24 January 2023
 
@@ -32,7 +32,7 @@ fontsize: 12pt
 
 **Files:**
 
-1)  *Seed_Rain_Data_2019_FINAL.xlsx* - contains seed rain data
+1)  *Seed_Data_2019.xlsx* - contains seed rain data
 
 2)  *Seed_Rain_Date.xlsx* - contains lumped seed data per week for each site
 
@@ -167,7 +167,6 @@ str(Uni_Seed$Plot)
 
 ### Analysis 1: Fitting the Model
 
-The mean and variance are not equal and indicates extreme overdispersion, meaning we cannot use a Poisson distribution.
 
 ```{r, message = FALSE, echo = FALSE, warning = FALSE}
 
@@ -178,7 +177,6 @@ Uni_Seed %>%
             Var = var(totseeds))
 ```
 
-Below is a negative binomial model predicting the number of seeds captured as a function of site.
 
 ```{r, message = FALSE, echo = FALSE, warning = FALSE}
 
@@ -193,8 +191,6 @@ NegBinom_seeds_glm <- MASS::glm.convert(neg_binom_seeds_mod)
 summary(NegBinom_seeds_glm, dispersion = 1)
 ```
 
-
-Posthoc comparisons between the remnant and reconstructed prairies.
 
 ```{r, message = FALSE, echo = FALSE, warning = FALSE}
 
@@ -223,6 +219,8 @@ neg.binom.est <- data.frame(site, response, lower, upper)
 ```
 
 ### Analysis 1: Visualizing Differences
+
+Code below creates Figure 1A.  
 
 ```{r, results = 'hide', echo = FALSE, message = FALSE, warning = FALSE}
 
@@ -262,6 +260,9 @@ abund.jitter.plot.ano
 ## Analysis 2: Are there differences in the timing of seed rain between sites?
 
 ### **Are there differences in the timing of seed rain between sites?**
+
+
+Code below creates Figure 2. 
 
 ```{r, results = 'hide', echo = FALSE, message = FALSE, warning = FALSE}
 
@@ -372,6 +373,9 @@ seed_mat <- data.matrix(seed_community_wide_labs)
 
 ### Analysis 3: NMDS
 
+
+Code below creates Figure 4.
+
 ```{r, results = 'hide', echo = FALSE, message = FALSE, warning = FALSE}
 
 # Standardize the community matrix
@@ -448,6 +452,8 @@ site.ellipses <- ordiellipse(Tot_NMDS, groups = site, display = "sites", kind = 
 site.ellipses.long2 <- ordiellipse.long(site.ellipses, grouping.name="site")
 ```
 
+
+
 ```{r, results = 'hide', message = FALSE, echo = FALSE, warning = FALSE}
 
 # Plot the species scores + the NMDS results
@@ -501,17 +507,6 @@ seed_perma_mod_tot
 pairwise.adonis2(data.dist.tot~as.factor(site), data=seed_com, p.adjust = "bonferroni")
 ```
 
-### Analysis 3: Multivariate homogeneity of group dispersions test
-
-```{r, message = FALSE, echo = FALSE, warning = FALSE}
-
-# Betadisper looking at whether there are significant differences in community variation between sites.
-
-## No significant differences
-
-bd <- betadisper(data.dist.tot, as.factor(seed_com$site))
-anova(bd)
-```
 
 ## Analysis 4: Are there differences in the diversity of seed rain between sites?
 
@@ -734,9 +729,12 @@ contrast(standardize, "trt.vs.ctrl")
 
 ### Analysis 4: Data visualization
 
-
+Code below creates Figure 3.
 
 ```{r, message = FALSE, echo = FALSE, warning = FALSE}
+
+### Code for Figure 3A.
+
 #### Species Richness
 
 Uni_Seed_Diversity$Plot <- factor(Uni_Seed_Diversity$Plot, levels=c("PFCA 1", "PFCA 2", "PFCA 3", "TP"))
@@ -764,7 +762,7 @@ SR.plot.annotated <- SR.plot +  annotate("text", x = c(1,2) , y = 55, label = "*
 
 ```{r, message = FALSE, echo = FALSE, warning = FALSE}
 
-
+### Code for Figure 3C
 
 Tot_SR_fig <- ggplot(week_species_counts, aes(y=Species_richness, x=`Sampling Date`, group=Plot)) +
   geom_line(aes(colour=Plot), size = 1.5,  show.legend = FALSE) +
@@ -787,6 +785,8 @@ Tot_SR_fig <- ggplot(week_species_counts, aes(y=Species_richness, x=`Sampling Da
 
 ```{r, message = FALSE, echo = FALSE, warning = FALSE}
 #### Native Species Richness
+
+### Code for Figure 3B
 
 Native_Uni_Seed_Diversity$Plot <- factor(Native_Uni_Seed_Diversity$Plot, levels=c("PFCA 1", "PFCA 2", "PFCA 3", "TP"))
 
@@ -813,9 +813,9 @@ Native.SR.plot.annotated <- Native.SR.plot.annotated + geom_vline(xintercept = 3
 
 
 ```{r, message = FALSE, echo = FALSE, warning = FALSE}
+### Code for Figure 3D
 
 
-# setwd("~/Desktop/Seed Rain 2019/Graphics")
 Tot_N_SR_fig <- ggplot(native_week_species_counts, aes(y=N_Species_richness, x=`Sampling Date`, group=Plot)) +
   geom_line(aes(colour=Plot), size = 1.5) +
   geom_point(aes(shape=Plot, fill=Plot), size=3)+
@@ -838,6 +838,8 @@ legend <- get_legend(Tot_N_SR_fig)
 ```
 
 ```{r, message = FALSE, echo = FALSE, warning = FALSE, fig.width = 10, fig.height = 8}
+
+### Makes Figure 3 panel. 
 
 panel_1 <- plot_grid(SR.plot.annotated, Native.SR.plot.annotated,Tot_SR_fig,Tot_N_SR_fig + theme(legend.position = 'none'),
           labels=c("A","B","C","D", ncol = 2),
@@ -926,6 +928,7 @@ lm.cwm.est <- data.frame(site, response, lower, upper)
 
 ```
 
+Code below makes Figure 1B.
 
 ```{r, message = FALSE, echo = FALSE, warning = FALSE}
 
@@ -954,6 +957,9 @@ CWM.plot
 #### Analysis 5: Seed Rain Biomass vs. Site
 
 
+Code below makes Figure 1C.
+
+
 ```{r, message = FALSE, echo = FALSE, warning = FALSE}
 
 # Calculate seed biomass by multiplying seed mass by number of seeds captured for each species
@@ -967,7 +973,7 @@ All_Captured_Biomass <- All_Captured %>%
 
 ```
 
-```{r}
+```{r, message = FALSE, echo = FALSE, warning = FALSE}
 # Total seed biomass for a site
 
 Lumped_Biomass <- All_Captured %>% 
