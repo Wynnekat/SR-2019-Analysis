@@ -114,11 +114,11 @@ Species_data <- read_excel("Seed_Rain_Traits_Dataset.xlsx")
 
 
 # Data set with sampling date (analysis 2 and 4)
-Seed_Data_Date <-  Seed_Data_Lumped[, -c(7,8,9)]
+Seed_Data_Date <-  Seed_Data_Lumped[, -c(7,8)]
 
 
 # Data set without sampling date (analysis 1 and 3)
-Seed_Data_Lumped <- Seed_Data_Lumped[, -c(3,7,8,9)]
+Seed_Data_Lumped <- Seed_Data_Lumped[, -c(3,7,8)]
   
 ```
 
