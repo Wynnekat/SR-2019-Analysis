@@ -1,6 +1,6 @@
 ---
 title: "Seed Rain Analysis"
-author: K. Carter Wynne
+author: 
 output: 
   html_document:
     smart: no
@@ -20,15 +20,6 @@ fontsize: 12pt
 
 ### **Quantifying seed rain patterns in a remnant and a chronosequence of restored tallgrass prairies in north central Missouri**
 
-**Background**: Seed rain, or the dispersal of seeds into an area, is an understudied phenomenon closely related to the establishment and persistence of plant species in a community. However, natural seed rain patterns in tallgrass prairie communities and how these patterns change during the restoration process remain poorly understood. To address these knowledge gaps, we revisited a seminal grassland seed rain study conducted in 1980 at a remnant Missouri tallgrass prairie and quantified seed rain patterns in the same remnant prairie and a chronosequence of nearby restorations. In May of 2019, we deployed 200 artificial turf grass seed traps (0.1 x 0.1 m) in 2, 6-7, and 15-year-old restored and remnant north-central Missouri tallgrass prairies. We collected and replaced seed traps every 2-weeks from June to December 2019.
-
-**Author:** Katherine Wynne ([Wynnekat\@msu.edu](mailto:Wynnekat@msu.edu){.email})
-
-**Co-authors:** M. J. Parker-Smith, E. M. Eyerly, L. L. Sullivan
-
-**Created:** 24 January 2023
-
-------------------------------------------------------------------------
 
 **Files:**
 
@@ -328,6 +319,7 @@ ggplot(New_Seed_Rain_Date, aes(y=Density_J, x=Date, group=Plot)) +
   guides(x = guide_axis(angle = 45))+
   ylim(0, 32000)
 ```
+
 
 ## Analysis 3: Are there differences in the composition of seed rain between sites?
 
