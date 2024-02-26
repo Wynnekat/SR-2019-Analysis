@@ -1,0 +1,396 @@
+---
+title: "Dispersal_Phenology"
+output: html_document
+date: "2023-12-12"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+### Libraries and Files
+
+```{r, eval=TRUE, echo=TRUE, warning=TRUE, message=FALSE}
+
+## Clear environment 
+rm(list=ls())
+
+## Libraries
+# Import excel files
+
+library(readxl)
+
+# Data cleaning and visualization
+library(tidyverse)
+
+# Community ecology functions (NMDS, diversity indices, etc.)
+library(vegan)
+
+# Package needed to do contrasts
+library(emmeans)
+
+# Export dataframes to excel files
+library(writexl)
+
+# Dimensions check for NMDS stress
+library(goeveg)
+
+# Needed in order to install and load the pairwiseAdonis package
+## install.packages("devtools")
+## library(devtools)
+## install_github("pmartinezarbizu/pairwiseAdonis/pairwiseAdonis")
+
+# Function for pairwise PERMANOVA tests
+library(pairwiseAdonis)
+
+# Function that allows us to fit a GLM with the negative binomial distribution
+library(MASS)
+
+# Makes grided figures
+library(cowplot)
+
+# Functions that let you plot ordiellipse in ggplot
+library(tcltk)
+library(BiodiversityR)
+
+
+# Function that repels geom_text so that text labels don't overlap
+library(ggrepel)
+
+# Function that helps me create tables
+library(flextable)
+
+# Function that allows me to export tables to word
+library(officer)
+
+# Function that gets means, sds, etc. easily
+library(mosaic)
+```
+
+
+## Data sets 
+
+```{r, eval=TRUE, echo=FALSE, warning=TRUE, message=FALSE}
+
+# Data sets
+
+Seed_Data_Lumped <- read_excel("Seed_Data_2019.xlsx")
+Seed_Rain_Date <- read_excel("Seed_Rain_Date.xlsx")
+Species_data <- read_excel("Seed_Rain_Traits_Dataset.xlsx")
+```
+
+## Data cleaning & management
+
+```{r}
+tucker_2019 <- Seed_Data_Lumped %>% 
+  filter(Plot == "TP")
+
+Tucker_lumped_2019 <- tucker_2019 %>% 
+  group_by(`Sampling Date`, Week, SPP6) %>% 
+  summarise(totseeds = sum(Number))
+
+Tucker_lumped_2019_joined <- left_join(Tucker_lumped_2019, Species_data)
+
+
+
+
+```
+
+## Grass only
+
+```{r}
+grass_only <- Tucker_lumped_2019_joined  %>% 
+  filter(Family == "Poaceae")
+
+grass_lumped <- grass_only   %>% 
+  group_by(`Sampling Date`, Week) %>% 
+  summarise(totseeds = sum(totseeds))
+
+```
+
+```{r}
+### All grasses 
+
+all.grass.plot <- 
+  ggplot(grass_lumped, aes(y=totseeds, x=`Sampling Date`)) +
+  geom_line(linewidth = .5, alpha = 1) +
+  geom_point(size=2, alpha = 1, pch = 21, fill = "white")+
+  theme_classic()+
+  labs(x = "Day of the year", y = "Number of seeds")
+
+
+```
+
+```{r}
+library(ggh4x)
+```
+
+```{r, fig.width = 8, fig.height = 12}
+# Agrostis hyemalis
+# Poa pratensis
+# Sphenopholis obtusata
+# Dichanthelium lanuginosum 
+# Festuca paradoza
+# Setaria parviflora
+# Schizachryium scoparium
+# Andropogon gerardii
+# Sorghastrum nutans
+# Sporobolus heterolepis
+
+grass_specific <- grass_only %>% 
+  filter(SPP6 %in% c("AGRHYE", "POAPRA", "SPHOBT", "DICLAN", "FESPAR", "SETPAR", "SCHSCO", "ANDGER", "SORNUT"))
+
+grass_specific$SPP6 <- factor(grass_specific$SPP6, levels=c("AGRHYE", "POAPRA", "SPHOBT", "DICLAN", "FESPAR", "SETPAR", "SCHSCO", "ANDGER", "SORNUT"))
+
+
+test <- ggplot(grass_specific, aes(y=totseeds, x=`Sampling Date`)) + 
+    geom_line(linewidth = .5, alpha = 1) + 
+    geom_point(size=2, alpha = 1, pch = 21, fill = "white")+
+    labs(x = "Day of the year", y = "Number of seeds") +
+    facet_grid(SPP6 ~ ., scales = "free_y")+
+  theme_classic()+
+  theme(
+    axis.title.x = element_blank(),
+    axis.text.x = element_blank(),
+    axis.ticks.x = element_blank(),
+    axis.line.y =  element_line(size = .5, linetype=1),
+    axis.line.x = element_blank(),
+    panel.background = element_blank(),
+  )
+
+
+Some.grass.plot <- test + 
+  facetted_pos_scales(
+    y = list(
+      SPP6 == "AGRHYE" ~ scale_y_continuous(limits = c(0, 1600), breaks = c(0, 1600, 800)),
+      SPP6 == "POAPRA" ~ scale_y_continuous(limits = c(0, 250), breaks = c(0, 250, 125)),
+      SPP6 == "SPHOBT" ~ scale_y_continuous(limits = c(0, 250), breaks = c(0, 250, 125)),
+      SPP6 == "DICLAN" ~ scale_y_continuous(limits = c(0, 80), breaks = c(0, 80, 40)),
+      SPP6 == "FESPAR" ~ scale_y_continuous(limits = c(0, 250), breaks = c(0, 250, 125)),
+      SPP6 == "SETPAR" ~ scale_y_continuous(limits = c(0, 40), breaks = c(0, 40, 20)),
+      SPP6 == "SCHSCO" ~ scale_y_continuous(limits = c(0, 250), breaks = c(0, 250, 125)),
+      SPP6 == "ANDGER" ~ scale_y_continuous(limits = c(0, 250), breaks = c(0, 250, 125)),
+      SPP6 == "SORNUT" ~ scale_y_continuous(limits = c(0, 250), breaks = c(0, 250, 125)),
+      SPP6 == "SPOHET" ~ scale_y_continuous(limits = c(0, 40), breaks = c(0, 40, 20))
+      )
+    )
+  
+  
+
+```
+
+```{r, fig.width = 8, fig.height = 10}
+
+plot_grid(
+  Some.grass.plot, all.grass.plot, ncol = 1, rel_heights = c(2,1)
+)
+
+
+```
+
+
+
+## ALL types of species
+
+
+```{r}
+### Everything
+
+all_species <- Tucker_lumped_2019_joined  %>% 
+  group_by(`Sampling Date`, Week) %>% 
+  summarise(totseeds = sum(totseeds))
+
+all.species.plot <- 
+  ggplot(all_species, aes(y=totseeds, x=`Sampling Date`)) +
+  geom_line(linewidth = .5, alpha = 1) +
+  geom_point(size=2, alpha = 1, pch = 21, fill = "white")+
+  theme_classic()+
+  labs(x = "Day of the year", y = "Number of seeds")
+
+all.species.plot
+```
+
+
+```{r, fig.width = 8, fig.height = 12}
+
+### Grasses
+
+# Agrostis hyemalis
+# Festuca paradoxa
+# Sorghastrum nutans
+
+### Forbs
+
+# Achillea millefolium
+# Solidago altissima
+# Pycnanthemum tenuifolium
+
+### Legumes
+
+# Chamaecrista fasciculata
+# Crotalaria sagittalis
+# Lespedeza capitata
+
+select_species <- Tucker_lumped_2019_joined %>% 
+  filter(SPP6 %in% c("ACHMIL", "SOLALT", "PYCTEN", "FESPAR", "AGRHYE", "SORNUT", "CHAFAS", "CROSAG", "LESCAP"))
+
+
+select_species$SPP6 <- factor(select_species$SPP6, levels=c("AGRHYE", "ACHMIL", "CROSAG", "CHAFAS", "FESPAR", "LESCAP", "PYCTEN", "SOLALT", "SORNUT"))
+
+
+test2 <- ggplot(select_species, aes(y=totseeds, x=`Sampling Date`)) + 
+    geom_line(linewidth = .5, alpha = 1) + 
+    geom_point(size=2, alpha = 1, pch = 21, fill = "white")+
+    labs(x = "Day of the year", y = "Number of seeds") +
+    facet_grid(SPP6 ~ ., scales = "free_y")+
+  theme_classic()+
+  theme(
+    axis.title.x = element_blank(),
+    axis.text.x = element_blank(),
+    axis.ticks.x = element_blank(),
+    axis.line.y =  element_line(size = .5, linetype=1),
+    axis.line.x = element_blank(),
+    panel.background = element_blank(),
+  )
+
+
+select.species.plot <- test2 + 
+  facetted_pos_scales(
+    y = list(
+      SPP6 == "AGRHYE" ~ scale_y_continuous(limits = c(0, 1600),
+                                            breaks = c(0, 1600, 800)),
+      SPP6 == "ACHMIL" ~ scale_y_continuous(limits = c(0, 50), 
+                                            breaks = c(0, 50, 25)),
+      SPP6 == "CROSAG" ~ scale_y_continuous(limits = c(0, 50), 
+                                            breaks = c(0, 50, 25)),
+      SPP6 == "CHAFAS" ~ scale_y_continuous(limits = c(0, 200),
+                                            breaks = c(0, 200, 100)),
+      SPP6 == "FESPAR" ~ scale_y_continuous(limits = c(0, 200), 
+                                            breaks = c(0, 200, 100)),
+      SPP6 == "LESCAP" ~ scale_y_continuous(limits = c(0, 50), 
+                                            breaks = c(0, 50, 25)),
+      SPP6 == "PYCTEN" ~ scale_y_continuous(limits = c(0, 2500),
+                                            breaks = c(0, 2500, 1250)),
+      SPP6 == "SOLALT" ~ scale_y_continuous(limits = c(0, 1000),
+                                            breaks = c(0, 1000, 500)),
+      SPP6 == "SORNUT" ~ scale_y_continuous(limits = c(0, 200), 
+                                            breaks = c(0, 200, 100))
+      )
+    )
+  
+  
+select.species.plot
+```
+```{r, fig.width = 8, fig.height = 10}
+
+plot_grid(
+  select.species.plot, all.species.plot, ncol = 1, rel_heights = c(2,1)
+)
+
+```
+
+
+## Only things captured in the windsock
+
+
+```{r}
+## Forbs 
+
+# Solidago altissima
+# Conyza canadensis
+# Eupatorium sp.
+# Euthamia gymnospermoides
+# Symphyotrichum sp.
+# Vernonia sp.
+
+## Graminoids
+
+# Agrostis hyemalis
+# Festuca paradoxa
+# Sorghastrum nutans
+# Sphenopholis obtusata
+# Schizachyrium scoparium
+# Tridens flavus
+
+
+select_species_windsock <- Tucker_lumped_2019_joined %>% 
+  filter(SPP6 %in% c("SOLALT", "CONCAN", "EUPSPP", "EUTGYM", "SYMSPP", "VERSPP", "AGRHYE", "FESPAR", "SORNUT", "SPHOBT", "SCHSCO", "TRIFLA"))
+
+
+select_species_windsock$SPP6 <- factor(select_species_windsock$SPP6, levels=c("AGRHYE", "SPHOBT","CONCAN", "FESPAR", "SCHSCO", "SORNUT", "SOLALT", "TRIFLA","EUPSPP", "VERSPP", "SYMSPP",  "EUTGYM"))
+
+
+test3 <- ggplot(select_species_windsock, aes(y=totseeds, x=`Sampling Date`)) + 
+    geom_line(linewidth = .5, alpha = 1) + 
+    geom_point(size=2, alpha = 1, pch = 21, fill = "white")+
+    labs(x = "Day of the year", y = "Number of seeds") +
+    facet_grid(SPP6 ~ ., scales = "free_y")+
+  theme_classic()+
+  theme(
+    axis.title.x = element_blank(),
+    axis.text.x = element_blank(),
+    axis.ticks.x = element_blank(),
+    axis.line.y =  element_line(size = .5, linetype=1),
+    axis.line.x = element_blank(),
+    panel.background = element_blank(),
+  )
+
+
+windsock.species.plot <- test3 + 
+  facetted_pos_scales(
+    y = list(
+      SPP6 == "AGRHYE" ~ scale_y_continuous(limits = c(0, 1600),
+                                            breaks = c(0, 1600, 800)),
+      SPP6 == "SPHOBT" ~ scale_y_continuous(limits = c(0, 250), 
+                                            breaks = c(0, 250, 125)),
+      SPP6 == "CONCAN" ~ scale_y_continuous(limits = c(0, 10), 
+                                            breaks = c(0, 10, 5)),
+      SPP6 == "FESPAR" ~ scale_y_continuous(limits = c(0, 250),
+                                            breaks = c(0, 250, 125)),
+      SPP6 == "SCHSCO" ~ scale_y_continuous(limits = c(0, 250), 
+                                            breaks = c(0, 250, 125)),
+      SPP6 == "SORNUT" ~ scale_y_continuous(limits = c(0, 250), 
+                                            breaks = c(0, 250, 125)),
+      SPP6 == "SOLALT" ~ scale_y_continuous(limits = c(0, 1000),
+                                            breaks = c(0, 1000, 500)),
+      SPP6 == "TRIFLA" ~ scale_y_continuous(limits = c(0, 4),
+                                            breaks = c(0, 4, 2)),
+      SPP6 == "EUPSPP" ~ scale_y_continuous(limits = c(0, 60), 
+                                            breaks = c(0, 60, 30)),
+      SPP6 == "VERSPP" ~ scale_y_continuous(limits = c(0, 120), 
+                                            breaks = c(0, 120, 60)),
+      SPP6 == "SYMSPP" ~ scale_y_continuous(limits = c(0, 60), 
+                                            breaks = c(0, 60, 30)),
+      SPP6 == "EUTGYM" ~ scale_y_continuous(limits = c(0, 60), 
+                                            breaks = c(0, 60, 30))
+      
+      
+      )
+    )
+  
+  
+windsock.species.plot
+```
+
+
+```{r, fig.width = 8, fig.height = 12}
+
+plot_grid(
+  windsock.species.plot, all.species.plot, ncol = 1, rel_heights = c(2,1)
+)
+
+```
+
+
+```{r}
+Seed_Data_Lumped <- Seed_Data_Lumped %>% 
+  group_by(`Sampling Date`, Week, SPP6) %>% 
+  summarise(totseeds = sum(Number))
+
+
+
+select_pendig <- Seed_Data_Lumped  %>% 
+  filter(SPP6 %in% c("PENDIG"))
+
+```
