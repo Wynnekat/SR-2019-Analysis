@@ -7,3 +7,317 @@ date: "2024-03-27"
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
+
+
+```{r, eval=TRUE, echo=TRUE, warning=TRUE, message=FALSE}
+
+## Clear environment 
+rm(list=ls())
+
+## Libraries
+# Import excel files
+
+library(readxl)
+
+# Data cleaning and visualization
+library(tidyverse)
+
+# Community ecology functions (NMDS, diversity indices, etc.)
+library(vegan)
+
+# Package needed to do contrasts
+library(emmeans)
+
+# Export dataframes to excel files
+library(writexl)
+
+# Dimensions check for NMDS stress
+library(goeveg)
+
+# Needed in order to install and load the pairwiseAdonis package
+## install.packages("devtools")
+## library(devtools)
+## install_github("pmartinezarbizu/pairwiseAdonis/pairwiseAdonis")
+
+# Function for pairwise PERMANOVA tests
+library(pairwiseAdonis)
+
+# Function that allows us to fit a GLM with the negative binomial distribution
+library(MASS)
+
+# Makes grided figures
+library(cowplot)
+
+# Functions that let you plot ordiellipse in ggplot
+library(tcltk)
+library(BiodiversityR)
+
+
+# Function that repels geom_text so that text labels don't overlap
+library(ggrepel)
+
+# Function that helps me create tables
+library(flextable)
+
+# Function that allows me to export tables to word
+library(officer)
+
+# Function that gets means, sds, etc. easily
+library(mosaic)
+```
+
+
+```{r}
+### 2019 study Wynne et al. 
+Seed_Rain_2019 <- read_excel("Seed_Data_2019.xlsx")
+
+### 1978 study Rabinowitz & Rapp 1980
+Seed_Rain_1978 <- read_excel("Rabinowitz_Rapp_1980_SR_Data.xlsx")
+
+```
+
+
+```{r}
+# Filter out any data that was not collected from the remnant prairie
+# Summarize by species at the site level
+
+TP_SR_2019 <- Seed_Rain_2019 %>% 
+  filter(Plot == "TP") %>% 
+  group_by(SPP6) %>% 
+  summarize(Number = sum(Number))
+
+```
+
+```{r}
+# Make the taxonomic identification comparable to R&R 1980 and vice versa
+
+## 2019 study
+
+TP_SR_2019  %>% 
+   summarize(Species_richness = n_distinct(SPP6))
+
+
+TP_SR_2019_lumped <- TP_SR_2019 
+
+
+for(i in 1:nrow(TP_SR_2019_lumped )){
+  
+# Group all Carex
+  ## CARBUS
+  ## CARBIC
+  ## CARFES
+  
+  
+  if(TP_SR_2019_lumped[i,1] == "CARBUS"){TP_SR_2019_lumped[i,1] <- "CARSPP"}
+  if(TP_SR_2019_lumped[i,1] == "CARBIC"){TP_SR_2019_lumped[i,1] <- "CARSPP"}
+  if(TP_SR_2019_lumped[i,1] == "CARFES"){TP_SR_2019_lumped[i,1] <- "CARSPP"}
+
+  
+# Group all Solidago and Symphyotrichum
+  ## SOLALT
+  ## SYMSPP
+  ## EUTGYM
+
+ if(TP_SR_2019_lumped[i,1] == "SOLALT"){TP_SR_2019_lumped[i,1] <- "SOLAST"}
+ if(TP_SR_2019_lumped[i,1] == "SYMSPP"){TP_SR_2019_lumped[i,1] <- "SOLAST"}
+ if(TP_SR_2019_lumped[i,1] == "EUTGYM"){TP_SR_2019_lumped[i,1] <- "SOLAST"}
+  
+  
+  
+# Group all unknown
+  ## UNKCYPER.2
+  ## UNKBLAKAST
+  ## UNKFRB15
+  ## UNKFRB30
+  ## UNKFRB35
+  ## UNKFRB47
+  ## UNKFRB51
+  ## UNKFRB53
+  ## UNKFRB57
+  ## UNKRAISIN
+  ## UNKSYM1
+  
+ if(TP_SR_2019_lumped[i,1] == "UNKCYPER.2"){TP_SR_2019_lumped[i,1] <- "UNKSPP"}
+ if(TP_SR_2019_lumped[i,1] == "UNKBLAKAST"){TP_SR_2019_lumped[i,1] <- "UNKSPP"}
+ if(TP_SR_2019_lumped[i,1] == "UNKFRB15"){TP_SR_2019_lumped[i,1] <- "UNKSPP"}
+ if(TP_SR_2019_lumped[i,1] == "UNKFRB30"){TP_SR_2019_lumped[i,1] <- "UNKSPP"}
+ if(TP_SR_2019_lumped[i,1] == "UNKFRB35"){TP_SR_2019_lumped[i,1] <- "UNKSPP"}
+ if(TP_SR_2019_lumped[i,1] == "UNKFRB47"){TP_SR_2019_lumped[i,1] <- "UNKSPP"}
+ if(TP_SR_2019_lumped[i,1] == "UNKFRB51"){TP_SR_2019_lumped[i,1] <- "UNKSPP"}
+ if(TP_SR_2019_lumped[i,1] == "UNKFRB53"){TP_SR_2019_lumped[i,1] <- "UNKSPP"}
+ if(TP_SR_2019_lumped[i,1] == "UNKFRB57"){TP_SR_2019_lumped[i,1] <- "UNKSPP"}
+ if(TP_SR_2019_lumped[i,1] == "UNKRAISIN"){TP_SR_2019_lumped[i,1] <- "UNKSPP"}
+ if(TP_SR_2019_lumped[i,1] == "UNKSYM1"){TP_SR_2019_lumped[i,1] <- "UNKSPP"}
+  
+}
+
+
+### Sum everything by species by transect again 
+
+
+
+# Looks good
+sort(unique(TP_SR_2019_lumped$SPP6))
+
+# Make sure everything is relumped together
+
+TP_SR_2019_lumped <- TP_SR_2019_lumped %>% 
+group_by(SPP6) %>% 
+summarize(Number = sum(Number)) 
+  
+
+TP_SR_2019_lumped$Density <- TP_SR_2019_lumped$Number / (0.1*0.1*5*10)
+
+
+
+## Double checking everything
+
+TP_SR_2019_lumped %>% 
+   summarize(Species_richness = n_distinct(SPP6))
+
+total_2019 <- TP_SR_2019_lumped %>% 
+   summarize(Number = sum(Number))
+
+total_2019 <- total_2019$Number
+
+
+TP_SR_2019_lumped$Percent <- (TP_SR_2019_lumped$Number / total_2019) * 100
+
+
+```
+
+```{r}
+Seed_Rain_1978 %>% 
+   summarize(Species_richness = n_distinct(SPP6))
+
+
+TP_SR_1978_lumped <- Seed_Rain_1978
+
+
+for(i in 1:nrow(TP_SR_1978_lumped)){
+  
+# Group all Vernonia
+ if(TP_SR_1978_lumped[i,2] == "VERBAL"){TP_SR_1978_lumped[i,2] <- "VERSPP"}
+
+# Group all Erigeron
+
+  if(TP_SR_1978_lumped[i,2] == "ERISTR"){TP_SR_1978_lumped[i,2] <- "ERISPP"}
+
+  
+}
+
+
+# Looks good
+sort(unique(TP_SR_1978_lumped$SPP6))
+
+
+TP_SR_1978_lumped <- TP_SR_1978_lumped %>% 
+group_by(SPP6) %>% 
+summarize(Number = sum(Number))
+
+TP_SR_1978_lumped$Density <- TP_SR_1978_lumped$Number * 2.99
+
+
+## Double checking everything
+
+# 32 species (not including unknown) (check)
+
+TP_SR_1978_lumped %>% 
+   summarize(Species_richness = n_distinct(SPP6))
+
+
+total_1978 <- TP_SR_1978_lumped %>% 
+   summarize(Number = sum(Number))
+
+total_1978 <- total_1978$Number
+
+TP_SR_1978_lumped$Percent <- (TP_SR_1978_lumped$Number / total_1978) * 100
+
+
+```
+
+```{r}
+
+# Make anything that contributes less than a percent to the total seed rain in a new category called "Rare sp."
+
+
+### 2019  -----------
+
+
+Comp_2019 <- TP_SR_2019_lumped
+
+for(i in 1:nrow(Comp_2019)){
+ if(Comp_2019[i,4] < 2){Comp_2019[i,1] <- "RARESPP"}
+}
+
+
+#Resum everything to calculate the percent contribution of rare species
+
+Comp_2019<- Comp_2019 %>% 
+group_by(SPP6) %>% 
+summarize(Number = sum(Number))
+
+Comp_2019$Percent <- (Comp_2019$Number / total_2019) * 100
+
+
+Comp_2019$Date <- rep("2019", nrow(Comp_2019))
+
+### 1978  -----------
+
+
+Comp_1978 <- TP_SR_1978_lumped
+
+for(i in 1:nrow(Comp_1978)){
+ if(Comp_1978[i,4] < 2){Comp_1978[i,1] <- "RARESPP"}
+}
+
+
+#Resum everything to calculate the percent contribution of rare species
+
+Comp_1978 <- Comp_1978  %>% 
+group_by(SPP6) %>% 
+summarize(Number = sum(Number))
+
+Comp_1978$Percent <- (Comp_1978 $Number /  total_1978) * 100
+
+Comp_1978$Date <- rep("1978", nrow(Comp_1978))
+```
+
+```{r}
+Comp_Together <- full_join(Comp_2019, Comp_1978)
+
+
+```
+
+
+
+```{r}
+Comp_Together$SPP6 <- factor(Comp_Together$SPP6, levels = c( "SPHOBT",  "SORNUT", "ANDGER", "OENBIE", "FESPAR", "SCHSCO", 
+                                                          "AGRHYE", "JUNSPP", "PYCTEN", "SOLAST", "RARESPP"))
+
+Comp_Together$Scientific_name <- c("Agrostis hyemalis", "Andropogon gerardii", "Juncus sp.", "Oenothera biennis", "Pycnanthemum tenuifolium", "All others", "Schizachyrium scoparium", "Solidago & Symphyotrichum sp.", "Sorghastrum nutans", "Agrostis hyemalis", "Andropogon gerardii", "Festuca paradoxa", "Juncus sp.", "All others", "Schizachyrium scoparium", "Solidago & Symphyotrichum sp.", "Sphenopholis obtusata")
+
+
+Comp_Together$Scientific_name <- factor(Comp_Together$Scientific_name, levels = c("Oenothera biennis","Pycnanthemum tenuifolium", "Sphenopholis obtusata",  "Sorghastrum nutans", "Andropogon gerardii", "Festuca paradoxa", "Schizachyrium scoparium",  "Agrostis hyemalis", "Juncus sp.", "Solidago & Symphyotrichum sp.",  "All others"))
+
+
+## All species that contributed >= 2 % to the seed rain
+
+
+## Pretty much re-sampled the same dominant species except two new ones appeared in 2019: Oenothera biennis (maybe because of the burn) and Pycnanthemum tenuifolium
+### Tucker prairie in general has shifted towards having PYCTEN become a more prevalant species in the last 40+ years. 
+### In 1978, only 15 flowering pycten were recorded in a 800m^2 area but is frequently encountered in the vegetation and seed rain alike
+### In case this was because fire synchronized flowering as observed in other prairie species, we re-visited data collected in 1981 that reiterates that PYCTEN was a rare species back then. 
+### Oenothera biennis likely recruited because fire stimulated germination. 
+### Some of these compositional differences could have occurred to differing trapping methods that may be biased against certain species as seen in cross comparison studies, but does not explain the lack of PYCTEN in the past. Lack of Solidago & Symphyotrichum was not because these were less common (they were still abundant in 2019), but because of an ill timed snow storm killing developing seeds pre-dispersal. 
+### Tucker Prairie is burned more frequently now than in 1978, which could have resulted in major compositional shifts toward pyrophilic species (Desmodium sp., Helianthus sp., etc.)
+
+library(viridis)
+ggplot(Comp_Together,
+    aes(fill=Scientific_name, y=Percent, x=Date)) + 
+    scale_fill_viridis(name = "Morphospecies", discrete = T) +
+    geom_bar(position="fill", stat="identity")+
+  theme_minimal()+
+  theme(text=element_text(size=18))
+
+```
